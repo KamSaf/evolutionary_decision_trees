@@ -1,0 +1,192 @@
+from uuid import uuid1, UUID
+from config import (
+    DECISION_COLUMN_SYMBOL,
+    DATA_FILE_PATH,
+    INDENT,
+)
+from utils import (
+    read_data,
+    get_max_ratio_attr,
+    get_unique_values,
+    split_dict,
+    get_dominant_dec_class_val,
+)
+
+
+class Node:
+    def __assign_parent(self) -> None:
+        """
+        Recursive method for assigning parent identificator
+        to nodes children.
+        """
+        if len(self.children) == 0:
+            return
+        for c in self.children:
+            c.parent_id = self.id
+            c.__assign_parent()
+
+    def __init__(
+        self,
+        label: str = "node",
+        children: list["Node"] | None = None,
+        val: str = "None",
+        parent_id: UUID | None = None,
+    ):
+        self.id = uuid1()
+        self.label = label
+        self.val = val
+        self.parent_id = parent_id
+        self.children = [] if children is None else children
+        self.__assign_parent()
+
+    def restore(self) -> None:
+        """
+        Method for restoring node parameters to default.
+        """
+        self.label = "node"
+        self.children.clear()
+        self.val = "None"
+        self.parent_id = None
+
+    def get_child_by_id(self, id: UUID) -> "Node | None":
+        """
+        Method for retrieving child of a node by ID.
+
+        Parameters:
+            id (UUID): ID of a node to look for
+
+        Returns:
+            node (Node | None): retrieved node
+        """
+        if self.id == id:
+            return self
+        target = list(filter(lambda node: node.id == id, self.children))
+        return target[0] if len(target) else None
+
+    def get_child_by_value(self, val: str) -> "Node | None":
+        """
+        Method for retrieving child of a node by value.
+
+        Parameters:
+            val (str): value of a node to look for
+
+        Returns:
+            node (Node | None): retrieved node
+        """
+        target = [c for c in self.children if c.val == val]
+        return target[0] if len(target) else None
+
+    def append_child(self, child: "Node") -> None:
+        """
+        Method for adding node to children list.
+
+        Parameters:
+           child (Node): node to be appended
+        """
+        self.children.append(child)
+
+    def get_children_vals(self) -> tuple[str | None, ...]:
+        """
+        Method for retrieving values of nodes children.
+
+        Returns:
+            val_list (tuple[str | None, ...]): list of children values
+        """
+        return tuple(map(lambda node: node.val, self.children))
+
+    def get_depth(self, first_step: bool = True) -> int:
+        """
+        Recursive method for calculating depth of tree, where self is its root.
+
+        Parameters:
+            first_step (bool): flag marking first iteration (don't change)
+
+        Returns:
+            tree_depth (int): depth of tree
+        """
+        depth = 0 if first_step else 1
+        depth_of_children = (
+            [c.get_depth(False) for c in self.children] if len(self.children) else []
+        )
+        max_children_depth = max(depth_of_children) if len(depth_of_children) > 0 else 0
+        return depth + max_children_depth
+
+    def to_string(self, indent: int = 0) -> str:
+        """
+        Recursive method for converting node data to string.
+
+        Parameters:
+            indent (int): indentation level (node depth)
+
+        Returns:
+            text (str): node data as string
+        """
+        ind = INDENT * indent
+        output = []
+        output.append(f"\n{ind}ID: {self.id}")
+        output.append(f"{ind}Label: {self.label}")
+        output.append(f"{ind}Value: {self.val}")
+        output.append(f"{ind}Parent: {self.parent_id if self.parent_id else None}")
+        if self.children:
+            output.append(f"{ind}Children:")
+            for child in self.children:
+                output.append(child.to_string(indent + 1))
+            output.append("\n")
+        return "\n".join(output)
+
+    def __str__(self) -> str:
+        return self.to_string()
+
+    @staticmethod
+    def build_tree_struct(
+        root: "Node | None" = None,
+        data: dict[str, list[float] | list[str]] | None = None,
+        data_path: str = DATA_FILE_PATH,
+        max_tree_depth=8,
+    ) -> "Node | None":
+        """
+        Function for building decision tree structure.
+
+        Parameters:
+            root: (Node | None): root from which tree will be built
+            data_path (str): path to dataset file
+            max_tree_depth (int): maximum decision tree depth
+
+        Returns:
+            tree (Node | None): decision tree
+        """
+        if root is None:
+            root = Node()
+        if "DECISION" in root.label:
+            return root
+        if not data:
+            data = read_data(data_path)
+        attr, ratio, thresh = get_max_ratio_attr(data)
+        if (
+            abs(ratio) == 0 or root.get_depth() == max_tree_depth - 1
+        ):  # may return tree consisting of one node if bad dataset is drawn
+            root.label = f"DECISION: {get_dominant_dec_class_val(data)}"
+            return root
+        root.label = f"{attr} > {thresh}"
+        split_data = split_dict(data, thresh, attr)
+        for i, sd in enumerate(split_data):
+            decision_column_values = tuple(
+                get_unique_values(sd)[DECISION_COLUMN_SYMBOL]
+            )
+            label = (
+                f"DECISION: {decision_column_values[0]}"
+                if len(decision_column_values) == 1
+                else "node"
+            )
+            new_node = Node(
+                label=label,
+                val=f"<= {thresh}" if i == 0 else f"> {thresh}",
+                parent_id=root.id,
+            )
+            root.append_child(new_node)
+            Node.build_tree_struct(new_node, sd)
+        return root
+
+
+if __name__ == "__main__":
+    pass
