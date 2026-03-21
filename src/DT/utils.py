@@ -6,7 +6,7 @@ from config import DECISION_COLUMN_SYMBOL, OUTPUT_PATH
 
 def randomize_data(path: str, output_path: str) -> None:
     """
-    Function for randomizing data file and saving it to new file.
+    Randomizes data file and saving it to new file.
 
     Parameters:
         path (str): path to dataset file
@@ -24,7 +24,7 @@ def read_data(
     path: str, sep: str = ",", drop_col: List[int] = [0], dec_attr_id: int = 1
 ) -> Dict[int, Dict[str, str | float]]:
     """
-    Function for reading data from a file without headers
+    Reads data from a file without headers
     (.csv is default format) and creating new headers.
 
     Parameters:
@@ -55,7 +55,7 @@ def load_line(
     dec_attr_id: int = 1,
 ) -> None:
     """
-    Function for loading row of data into data dictionary.
+    Loads row of data into data dictionary.
 
     Parameters:
         data (Dict[int, Dict[str, str | float]]): dataset as dictionary
@@ -81,7 +81,7 @@ def load_line(
 
 def get_attr_names(data: Dict[int, Dict[str, str | float]]) -> List[str]:
     """
-    Function for returning names of all attributes in dataset.
+    Returns names of all attributes in dataset.
 
     Parameters:
         data (Dict[int, Dict[str, str | float]]): dataset as dictionary
@@ -96,7 +96,7 @@ def get_unique_values(
     data: Dict[int, Dict[str, str | float]],
 ) -> Dict[str, List[str | float]]:
     """
-    Function for returning unique values of attributes.
+    Returns unique values of attributes.
 
     Parameters:
         data (Dict[int, Dict[str, str | float]]): dataset as dictionary
@@ -114,37 +114,95 @@ def get_unique_values(
     return {attr: sorted(values) for attr, values in unique_values.items()}
 
 
-def get_attr_vals(
-    data: Dict[int, Dict[str, str | float]], attr: str
-) -> List[str | float]:
+def get_col(data: Dict[int, Dict[str, str | float]], attr: str) -> List[str | float]:
     """
     Returns all values from a column.
 
     Parameters:
-        data (Dict[int, dict[str, str | float]]): dataset as dictionary
+        data (Dict[int, Dict[str, str | float]]): dataset as dictionary
         attr (str): attribute (column) name
 
     Returns:
-        attr_vals (List[str | float]) - list of all attribute (column) values
+        col_vals (List[str | float]) - list of all attribute (column) values
     """
     return [record[attr] for record in data.values()]
 
 
 def get_value_count(
-    data: Dict[int, dict[str, str | float]],
+    data: Dict[int, Dict[str, str | float]],
 ) -> Dict[str, Dict[str | float, int]]:
     """
-    Function for returning number of appearances of value in column.
+    Returns number of appearances of value in column.
 
     Parameters:
-        data (Dict[int, dict[str, str | float]]): dataset as dictionary
+        data (Dict[int, Dict[str, str | float]]): dataset as dictionary
 
     Returns:
-        attr_val_count (dict[str, int]) - key - attribute name, value - dictionary with attribute value and number of appearances
+        attr_val_count (Dict[str, Dict[str | float, int]]) - key - attribute name, value - dictionary with
+        attribute value and number of appearances
     """
     unique_vals = get_unique_values(data)
     attr_val_count = {}
     for attr, values in unique_vals.items():
-        val_app_num = {val: get_attr_vals(data, attr).count(val) for val in values}
+        val_app_num = {val: get_col(data, attr).count(val) for val in values}
         attr_val_count[attr] = val_app_num
     return attr_val_count
+
+
+def get_dominant_attr_val(
+    data: Dict[int, Dict[str, str | float]], attr: str
+) -> str | float:
+    """
+    Returns dominant value in given dataset column
+
+    Parameters:
+        data (Dict[int, Dict[str, str | float]]): dataset as dictionary
+
+    Returns:
+        dom_val (str | float) - dominant value in column
+    """
+    values_count = get_value_count(data)[attr]
+    max_val = ""
+    max_num = 0
+    for val, num in values_count.items():
+        if num > max_num:
+            max_val = val
+            max_num = num
+    return max_val
+
+
+def get_values_probabilities(
+    data: Dict[int, Dict[str, str | float]],
+) -> Dict[str, Dict[str | float, float]]:
+    """
+    Returns probabilities of every attribute value.
+
+    Parameters:
+        data (Dict[int, Dict[str, str | float]]): dataset as dictionary
+
+    Returns:
+        values_propabilities (Dict[str, Dict[str | float, float]]): key - attribute name, value - dictionary with unique
+        values as keys and its propabilities as values
+    """
+    probabilities = {}
+    values_count = get_value_count(data)
+    for attr, values in values_count.items():
+        col_length = len(get_col(data, attr))
+        probabilities[attr] = {
+            val: float(num) / float(col_length) for val, num in values.items()
+        }
+    return probabilities
+
+
+def calc_entropy(probabilities: List[float]) -> float:
+    """
+    Calculates entropy from a list of propabilities.
+
+    Parameters:
+        probabilities (List[float]): list of attribute values probabilities
+
+    Return:
+        entropy (float): calculated entropy
+    """
+    filtered_propabilities = (p for p in probabilities if p != 0)
+    return -1 * sum([p * math.log2(p) for p in filtered_propabilities])
