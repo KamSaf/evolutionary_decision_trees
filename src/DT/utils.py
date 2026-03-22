@@ -3,6 +3,8 @@ import math
 from typing import List, Dict, Tuple
 from src.DT.config import DECISION_COLUMN_SYMBOL
 
+# import time
+
 
 def randomize_data(path: str, output_path: str) -> None:
     """
@@ -258,7 +260,7 @@ def get_column_entropy(
     Returns:
         entropy (float): calculated entorpy of a given column
     """
-
+    # WYLICZANIE PRAWDOPODOBIEŃSTWA TYLKO DLA KOLUMNY !!!!
     values_propabilities = list(get_values_probabilities(data)[attr].values())
     return get_entropy(values_propabilities)
 
@@ -306,7 +308,9 @@ def get_gain_ratio(
         return (None, None)
     decision_column_entropy = get_column_entropy(data)
     for thresh in split_points:
+        # start = time.time()
         info = get_info(data, thresh, attr)
+        # stop = time.time()
         gain_ratios[thresh] = (decision_column_entropy - info) / decision_column_entropy
     max_gain_ratio = -1.0
     max_thresh = 0.0
@@ -333,7 +337,11 @@ def get_max_ratio_attr(
     attrs.remove(DECISION_COLUMN_SYMBOL)
     ratios = {}
     for attr in attrs:
-        split_points = sorted(get_col(data, attr))
+        sorted_vals = sorted(get_col(data, attr))
+        split_points = [
+            (sorted_vals[i] + sorted_vals[i + 1]) / 2  # type: ignore
+            for i in range(len(sorted_vals) - 1)
+        ]
         thresh, gain_ratio = get_gain_ratio(data, attr, split_points)  # type: ignore
         ratios[attr] = (thresh, gain_ratio)
     max_gain_ratio = -1.0

@@ -144,6 +144,7 @@ class Node:
         data: Dict[int, Dict[str, str | float]] | None = None,
         data_path: str = DATA_FILE_PATH,
         max_tree_depth=8,
+        split_level=0,
     ) -> "Node | None":
         """
         Function for building decision tree structure.
@@ -153,7 +154,7 @@ class Node:
             data (Dict[int, Dict[str, str | float]] | None): dataset as dictionary
             data_path (str): path to dataset file
             max_tree_depth (int): maximum decision tree depth
-
+            split_level (int): current split level (do not change)
         Returns:
             tree (Node | None): decision tree
         """
@@ -164,8 +165,9 @@ class Node:
         if not data:
             data = read_data(data_path)
         attr, ratio, thresh = get_max_ratio_attr(data)
+        split_level += 1
         if (
-            abs(ratio) == 0 or root.get_depth() == max_tree_depth - 1
+            abs(ratio) == 0 or split_level == max_tree_depth - 1
         ):  # may return tree consisting of one node if bad dataset is drawn
             root.label = (
                 f"DECISION: {get_dominant_attr_val(data, DECISION_COLUMN_SYMBOL)}"
@@ -188,5 +190,5 @@ class Node:
                 parent_id=root.id,
             )
             root.append_child(new_node)
-            Node.build_tree_struct(new_node, sd)
+            Node.build_tree_struct(new_node, sd, split_level=split_level)
         return root
