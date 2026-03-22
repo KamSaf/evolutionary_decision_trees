@@ -1,7 +1,7 @@
 from random import shuffle
 import math
-from typing import Iterable, List, Dict
-from config import DECISION_COLUMN_SYMBOL, OUTPUT_PATH
+from typing import List, Dict, Tuple
+from src.DT.config import DECISION_COLUMN_SYMBOL
 
 
 def randomize_data(path: str, output_path: str) -> None:
@@ -128,6 +128,18 @@ def get_col(data: Dict[int, Dict[str, str | float]], attr: str) -> List[str | fl
     return [record[attr] for record in data.values()]
 
 
+def get_dataset_length(data: Dict[int, Dict[str, str | float]]) -> int:
+    """
+    Returns length of dataset.
+
+    Parameters:
+        data (Dict[int, Dict[str, str | float]]): dataset as dictionary
+    Returns:
+        dataset_length (int) - length of dataset (decision column length)
+    """
+    return len(get_col(data, DECISION_COLUMN_SYMBOL))
+
+
 def get_value_count(
     data: Dict[int, Dict[str, str | float]],
 ) -> Dict[str, Dict[str | float, int]]:
@@ -194,7 +206,7 @@ def get_values_probabilities(
     return probabilities
 
 
-def calc_entropy(probabilities: List[float]) -> float:
+def get_entropy(probabilities: List[float]) -> float:
     """
     Calculates entropy from a list of propabilities.
 
@@ -206,3 +218,130 @@ def calc_entropy(probabilities: List[float]) -> float:
     """
     filtered_propabilities = (p for p in probabilities if p != 0)
     return -1 * sum([p * math.log2(p) for p in filtered_propabilities])
+
+
+def split_dataset(
+    data: Dict[int, Dict[str, str | float]], thresh: float, attr: str
+) -> List[Dict[int, Dict[str, str | float]]]:
+    """
+    Splits dataset by attribute value threshold.
+
+    Parameters:
+        data (ddict[str, list[float] | list[str]]): dataset as dictionary
+        thresh (float): attribute values threshold
+        attr (str): attribute name (column header)
+
+    Returns:
+        split_data (List[Dict[int, Dict[str, str | float]]]): list of two data subsets split by given threshold
+    """
+    subsets = [{}, {}]
+    if attr == DECISION_COLUMN_SYMBOL:
+        return subsets
+    for record in data.values():
+        if record[attr] <= thresh:  # type: ignore
+            subsets[0][len(subsets[0])] = record
+        else:
+            subsets[1][len(subsets[1])] = record
+    return subsets
+
+
+def get_column_entropy(
+    data: Dict[int, Dict[str, str | float]], attr: str = DECISION_COLUMN_SYMBOL
+) -> float:
+    """
+    Calculates entropy for a given column in dataset.
+
+    Parameters:
+        data (Dict[int, Dict[str, str | float]]): dataset as dictionary
+        attr (str): attribute name
+
+    Returns:
+        entropy (float): calculated entorpy of a given column
+    """
+
+    values_propabilities = list(get_values_probabilities(data)[attr].values())
+    return get_entropy(values_propabilities)
+
+
+def get_info(
+    data: Dict[int, Dict[str, str | float]], thresh: float, attr: str
+) -> float:
+    """
+    Calculates info for a given attribute in dataset dictionary.
+
+    Parameters:
+        data (Dict[int, Dict[str, str | float]]): dataset as dictionary
+        threshold (float): attribute values threshold
+        attr (str): split attribute name
+
+    Returns:
+        attr_info (float): calculated info of given attribute
+    """
+    data_subsets = split_dataset(data, thresh, attr=attr)
+    info = 0
+    for subset in data_subsets:
+        entropy = get_column_entropy(subset)
+        info += (get_dataset_length(subset) / get_dataset_length(data)) * entropy
+    return info
+
+
+def get_gain_ratio(
+    data: Dict[int, Dict[str, str | float]],
+    attr: str,
+    split_points: List[float],
+) -> Tuple[float, float] | Tuple[None, None]:
+    """
+    Returns tuple containing best threshold and its gain ratio.
+
+    Parameters:
+        data (Dict[int, Dict[str, str | float]]): dataset as dictionary
+        attr (str): name of attribute
+        split_points (List[float]): list of value splitting points
+
+    Returns:
+        gain_ratios (Tuple[float, float] | Tuple[None, None]):
+    """
+    gain_ratios = {}
+    if len(split_points) < 1:
+        return (None, None)
+    decision_column_entropy = get_column_entropy(data)
+    for thresh in split_points:
+        info = get_info(data, thresh, attr)
+        gain_ratios[thresh] = (decision_column_entropy - info) / decision_column_entropy
+    max_gain_ratio = -1.0
+    max_thresh = 0.0
+    for thresh, gain_ratio in gain_ratios.items():
+        if gain_ratio > max_gain_ratio:
+            max_gain_ratio = gain_ratio
+            max_thresh = thresh
+    return max_thresh, max_gain_ratio
+
+
+def get_max_ratio_attr(
+    data: Dict[int, Dict[str, str | float]],
+) -> Tuple[str, float, float]:
+    """
+    Returns attribute name and threshold with highest gain ratio in given dataset.
+
+    Parameters:
+        data (dict[str, list[float] | list[str]]): dataset as dictionary
+
+    Returns:
+        (tuple[str, float, float, float]): attribute name, gain ratio, threshold
+    """
+    attrs = get_attr_names(data)
+    attrs.remove(DECISION_COLUMN_SYMBOL)
+    ratios = {}
+    for attr in attrs:
+        split_points = sorted(get_col(data, attr))
+        thresh, gain_ratio = get_gain_ratio(data, attr, split_points)  # type: ignore
+        ratios[attr] = (thresh, gain_ratio)
+    max_gain_ratio = -1.0
+    max_thresh = 0.0
+    max_attr = ""
+    for attr, (thresh, gain_ratio) in ratios.items():
+        if gain_ratio > max_gain_ratio:
+            max_gain_ratio = gain_ratio
+            max_thresh = thresh
+            max_attr = attr
+    return max_attr, max_gain_ratio, max_thresh

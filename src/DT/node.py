@@ -1,15 +1,16 @@
+from typing import Dict
 from uuid import uuid1, UUID
-from config import (
+from src.DT.config import (
     DECISION_COLUMN_SYMBOL,
     DATA_FILE_PATH,
     INDENT,
 )
-from utils import (
+from src.DT.utils import (
     read_data,
     get_max_ratio_attr,
     get_unique_values,
-    split_dict,
-    get_dominant_dec_class_val,
+    split_dataset,
+    get_dominant_attr_val,
 )
 
 
@@ -140,7 +141,7 @@ class Node:
     @staticmethod
     def build_tree_struct(
         root: "Node | None" = None,
-        data: dict[str, list[float] | list[str]] | None = None,
+        data: Dict[int, Dict[str, str | float]] | None = None,
         data_path: str = DATA_FILE_PATH,
         max_tree_depth=8,
     ) -> "Node | None":
@@ -148,7 +149,8 @@ class Node:
         Function for building decision tree structure.
 
         Parameters:
-            root: (Node | None): root from which tree will be built
+            root (Node | None): root from which tree will be built
+            data (Dict[int, Dict[str, str | float]] | None): dataset as dictionary
             data_path (str): path to dataset file
             max_tree_depth (int): maximum decision tree depth
 
@@ -165,10 +167,12 @@ class Node:
         if (
             abs(ratio) == 0 or root.get_depth() == max_tree_depth - 1
         ):  # may return tree consisting of one node if bad dataset is drawn
-            root.label = f"DECISION: {get_dominant_dec_class_val(data)}"
+            root.label = (
+                f"DECISION: {get_dominant_attr_val(data, DECISION_COLUMN_SYMBOL)}"
+            )
             return root
         root.label = f"{attr} > {thresh}"
-        split_data = split_dict(data, thresh, attr)
+        split_data = split_dataset(data, thresh, attr)
         for i, sd in enumerate(split_data):
             decision_column_values = tuple(
                 get_unique_values(sd)[DECISION_COLUMN_SYMBOL]
@@ -186,7 +190,3 @@ class Node:
             root.append_child(new_node)
             Node.build_tree_struct(new_node, sd)
         return root
-
-
-if __name__ == "__main__":
-    pass
