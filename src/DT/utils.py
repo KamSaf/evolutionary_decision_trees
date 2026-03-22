@@ -3,8 +3,6 @@ import math
 from typing import List, Dict, Tuple
 from src.DT.config import DECISION_COLUMN_SYMBOL
 
-# import time
-
 
 def randomize_data(path: str, output_path: str) -> None:
     """
@@ -186,25 +184,19 @@ def get_dominant_attr_val(
 
 
 def get_values_probabilities(
-    data: Dict[int, Dict[str, str | float]],
-) -> Dict[str, Dict[str | float, float]]:
+    column: List[str | float],
+) -> Dict[str | float, float]:
     """
-    Returns probabilities of every attribute value.
+    Returns probabilities of value.
 
     Parameters:
-        data (Dict[int, Dict[str, str | float]]): dataset as dictionary
+        column (List[str | float]): values of a column from dataset
 
     Returns:
-        values_propabilities (Dict[str, Dict[str | float, float]]): key - attribute name, value - dictionary with unique
-        values as keys and its propabilities as values
+        values_propabilities (Dict[str | float, float]): key - column value, value - probability
     """
-    probabilities = {}
-    values_count = get_value_count(data)
-    for attr, values in values_count.items():
-        col_length = len(get_col(data, attr))
-        probabilities[attr] = {
-            val: float(num) / float(col_length) for val, num in values.items()
-        }
+    unique_values = list(set(column))
+    probabilities = {val: column.count(val) / len(column) for val in unique_values}
     return probabilities
 
 
@@ -260,8 +252,8 @@ def get_column_entropy(
     Returns:
         entropy (float): calculated entorpy of a given column
     """
-    # TODO WYLICZANIE PRAWDOPODOBIEŃSTWA TYLKO DLA KOLUMNY !!!!
-    values_propabilities = list(get_values_probabilities(data)[attr].values())
+    column = get_col(data, attr)
+    values_propabilities = list(get_values_probabilities(column).values())
     return get_entropy(values_propabilities)
 
 
@@ -308,9 +300,7 @@ def get_gain_ratio(
         return (None, None)
     decision_column_entropy = get_column_entropy(data)
     for thresh in split_points:
-        # start = time.time()
         info = get_info(data, thresh, attr)
-        # stop = time.time()
         gain_ratios[thresh] = (decision_column_entropy - info) / decision_column_entropy
     max_gain_ratio = -1.0
     max_thresh = 0.0
