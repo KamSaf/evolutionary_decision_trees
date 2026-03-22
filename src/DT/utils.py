@@ -260,7 +260,7 @@ def get_column_entropy(
     Returns:
         entropy (float): calculated entorpy of a given column
     """
-    # WYLICZANIE PRAWDOPODOBIEŃSTWA TYLKO DLA KOLUMNY !!!!
+    # TODO WYLICZANIE PRAWDOPODOBIEŃSTWA TYLKO DLA KOLUMNY !!!!
     values_propabilities = list(get_values_probabilities(data)[attr].values())
     return get_entropy(values_propabilities)
 
