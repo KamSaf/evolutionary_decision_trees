@@ -2,6 +2,7 @@ from random import shuffle
 import math
 from typing import List, Dict, Tuple
 from src.DT.config import DECISION_COLUMN_SYMBOL
+from random import choice
 
 
 def randomize_data(path: str, output_path: str) -> None:
@@ -343,3 +344,38 @@ def get_max_ratio_attr(
             max_thresh = thresh
             max_attr = attr
     return max_attr, max_gain_ratio, max_thresh
+
+
+def get_random_ratio_attr(
+    data: Dict[int, Dict[str, str | float]],
+) -> Tuple[str, float, float]:
+    """
+    Returns attribute name and threshold with randomly chosen gain ratio in given dataset.
+
+    Parameters:
+        data (dict[str, list[float] | list[str]]): dataset as dictionary
+
+    Returns:
+        (tuple[str, float, float, float]): attribute name, gain ratio, threshold
+    """
+    attrs = get_attr_names(data)
+    attrs.remove(DECISION_COLUMN_SYMBOL)
+    ratios = {}
+    for attr in attrs:
+        sorted_vals = sorted(get_col(data, attr))
+        split_points = [
+            (sorted_vals[i] + sorted_vals[i + 1]) / 2  # type: ignore
+            for i in range(len(sorted_vals) - 1)
+        ]
+        random_thresh = choice(split_points)
+        decision_column_entropy = get_column_entropy(data)
+        info = get_info(data, random_thresh, attr)
+        gain_ratio = (decision_column_entropy - info) / decision_column_entropy
+        ratios[attr] = (random_thresh, gain_ratio)
+    chosen_gain_ratio = 0.0
+    chosen_thresh = 0.0
+    chosen_attr = ""
+    while chosen_gain_ratio == 0:
+        chosen_attr = choice(list(ratios.keys()))
+        chosen_thresh, chosen_gain_ratio = ratios[chosen_attr]
+    return chosen_attr, chosen_gain_ratio, chosen_thresh

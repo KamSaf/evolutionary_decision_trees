@@ -11,6 +11,7 @@ from src.DT.utils import (
     get_unique_values,
     split_dataset,
     get_dominant_attr_val,
+    get_random_ratio_attr,
 )
 
 
@@ -143,8 +144,9 @@ class Node:
         root: "Node | None" = None,
         data: Dict[int, Dict[str, str | float]] | None = None,
         data_path: str = DATA_FILE_PATH,
-        max_tree_depth=8,
-        split_level=0,
+        max_tree_depth: int = 8,
+        split_level: int = 0,
+        random: bool = False,
     ) -> "Node | None":
         """
         Function for building decision tree structure.
@@ -155,6 +157,7 @@ class Node:
             data_path (str): path to dataset file
             max_tree_depth (int): maximum decision tree depth
             split_level (int): current split level (do not change)
+            random (bool): random tree induction flag
         Returns:
             tree (Node | None): decision tree
         """
@@ -164,7 +167,9 @@ class Node:
             return root
         if not data:
             data = read_data(data_path)
-        attr, ratio, thresh = get_max_ratio_attr(data)
+        attr, ratio, thresh = (
+            get_max_ratio_attr(data) if not random else get_random_ratio_attr(data)
+        )
         split_level += 1
         if (
             abs(ratio) == 0 or split_level == max_tree_depth - 1
