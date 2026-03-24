@@ -197,3 +197,26 @@ class Node:
             root.append_child(new_node)
             Node.build_tree_struct(new_node, sd, split_level=split_level)
         return root
+
+    def predict(self, data_row: Dict[str, str | float]) -> str | None:
+        """
+        Predicts class with decision tree structure.
+
+        Parameters:
+            data_row (Dict[str, str | float]): single row from dataset
+
+        Returns:
+            decision (str | None): decision made with decision tree
+        """
+        if "DECISION" in self.label:
+            return self.label
+        attr, _, thresh = self.label.split(" ")
+        val = data_row[attr]
+        test_res = float(val) > float(thresh)
+        next_step_val = f"{'>' if test_res else '<='} {thresh}"
+        next_step = self.get_child_by_value(next_step_val)
+        if not next_step:
+            return None
+        new_ds = data_row.copy()
+        pred = next_step.predict(new_ds)
+        return pred.split(" ")[1] if pred and "DECISION" in pred else pred
