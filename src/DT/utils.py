@@ -379,3 +379,26 @@ def get_random_ratio_attr(
         chosen_attr = choice(list(ratios.keys()))
         chosen_thresh, chosen_gain_ratio = ratios[chosen_attr]
     return chosen_attr, chosen_gain_ratio, chosen_thresh
+
+
+def evaluate(stats: Dict[str, List[int]]) -> List[float]:
+    """
+    Calculates average classification quality metrics from test statistics.
+
+    Parameters:
+        stats (Dict[str, List[int]]): decision tree test statistics
+
+    Returns:
+        metrics (List[float]): list of average classification metrics as floats
+    """
+    accuracy_sum = 0
+    recall_sum = 0
+    precision_sum = 0
+    for _, res in stats.items():
+        accuracy_sum += (res[0] + res[3]) / float(sum(res)) if sum(res) > 0 else 0
+        recall_sum += res[0] / float(res[0] + res[2]) if res[0] + res[2] > 0 else 0
+        precision_sum += res[0] / float(res[0] + res[1]) if res[0] + res[1] > 0 else 0
+    return [
+        round(stat / float(len(stats.keys())) * 100, 2)
+        for stat in (accuracy_sum, recall_sum, precision_sum)
+    ]

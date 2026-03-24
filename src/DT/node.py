@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, List
 from uuid import uuid1, UUID
 from src.DT.config import (
     DECISION_COLUMN_SYMBOL,
@@ -217,6 +217,36 @@ class Node:
         next_step = self.get_child_by_value(next_step_val)
         if not next_step:
             return None
-        new_ds = data_row.copy()
-        pred = next_step.predict(new_ds)
+        pred = next_step.predict(data_row)
         return pred.split(" ")[1] if pred and "DECISION" in pred else pred
+
+    def test_tree(
+        self, test_ds: Dict[int, Dict[str, str | float]]
+    ) -> Dict[str | float, List[int]]:
+        """
+        Method testing decision tree classification with testing dataset.
+
+        Parameters:
+            test_ds (Dict[int, Dict[str, str | float]]): testing dataset
+
+        Returns:
+            results (Dict[str, List[int]]): TP, FP, FN, TN values for each class
+        """
+        results = {
+            dec: [0, 0, 0, 0]
+            for dec in get_unique_values(test_ds)[DECISION_COLUMN_SYMBOL]
+        }
+        for _, row in test_ds.items():
+            actual = row[DECISION_COLUMN_SYMBOL]
+            pred = self.predict(row)
+            for class_ in results.keys():
+                if class_ == actual and pred == class_:
+                    results[class_][0] += 1  # TP
+                elif actual != class_ and pred == class_:
+                    results[class_][1] += 1  # FP
+                elif actual == class_ and pred != class_:
+                    results[class_][2] += 1  # FN
+                elif actual != class_ and pred != class_:
+                    if class_ != pred and class_ != actual:
+                        results[class_][3] += 1  # TN
+        return results
