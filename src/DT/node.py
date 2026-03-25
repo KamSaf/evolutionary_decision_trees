@@ -1,4 +1,5 @@
 from typing import Dict, List
+from random import choice
 from uuid import uuid1, UUID
 from src.DT.config import (
     DECISION_COLUMN_SYMBOL,
@@ -112,6 +113,34 @@ class Node:
         )
         max_children_depth = max(depth_of_children) if len(depth_of_children) > 0 else 0
         return depth + max_children_depth
+
+    def update_node_attr(self, attr: str, thresh: float) -> None:
+        """
+        Update nodes label and value with given attribute name and values threshold.
+
+        Parameters:
+            attr (str): new name of attribite
+            thresh (float): new attribute value threshold
+        """
+        self.label = f"{attr} > {thresh}"
+        for i, c in enumerate(self.children):
+            c.val = f"<= {thresh}" if i == 0 else f"> {thresh}"
+
+    def get_random_node_id(self) -> UUID:
+        """
+        Returns randomly chosen from node id from subtree.
+
+        Returns:
+            (UUID): randomly chosen node ID
+        """
+        queue = self.children[:]
+        nodes_ids = [self.id]
+        for node in queue:
+            children = node.children
+            queue += children
+            for c in children:
+                nodes_ids.append(c.id)
+        return choice(nodes_ids)
 
     def to_string(self, indent: int = 0) -> str:
         """
