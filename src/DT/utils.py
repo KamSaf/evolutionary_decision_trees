@@ -2,7 +2,7 @@ from random import shuffle
 import math
 from typing import List, Dict, Tuple
 from src.DT.config import DECISION_COLUMN_SYMBOL
-from random import choice
+from random import choice, sample
 
 
 def randomize_data(path: str, output_path: str) -> None:
@@ -402,3 +402,69 @@ def evaluate(stats: Dict[str, List[int]]) -> List[float]:
         round(stat / float(len(stats.keys())) * 100, 2)
         for stat in (accuracy_sum, recall_sum, precision_sum)
     ]
+
+
+def create_datasets(
+    data: Dict[int, Dict[str, str | float]],
+    train_ratio: float = 0.7,
+    valid_ratio: float = 0.15,
+    test_ratio: float = 0.15,
+) -> Tuple[
+    Dict[int, Dict[str, str | float]],
+    Dict[int, Dict[str, str | float]],
+    Dict[int, Dict[str, str | float]],
+]:
+    """
+    Returns training, validation and testing datasets.
+
+    Parameters:
+        data (dict[str, list[float] | list[str]]): dataset as dictionary
+        train_ratio (float): train test split ratio
+        valid_ratio (float): valid test split ratio
+        test_ratio (float): test test split ratio
+
+    Returns:
+        (Tuple[
+            Dict[int, Dict[str, str | float]],
+            Dict[int, Dict[str, str | float]],
+            Dict[int, Dict[str, str | float]]
+            ]): split datasets
+    """
+    if train_ratio + valid_ratio + test_ratio != 1.0:
+        raise (Exception("Invalid dataset split ratios. Must sum to 1.0."))
+    ds_length = get_dataset_length(data)
+    train_ds_max_index = math.ceil(ds_length * train_ratio)
+    valid_ds_max_index = math.ceil(train_ds_max_index + ds_length * valid_ratio)
+    train_ds = {i: record for i, record in data.items() if i < train_ds_max_index}
+    valid_ds = {
+        i: record
+        for i, record in data.items()
+        if i >= train_ds_max_index and i < valid_ds_max_index
+    }
+    train_ds = {i: record for i, record in data.items() if i >= valid_ds_max_index}
+    return (train_ds, valid_ds, train_ds)
+
+
+def get_random_data(
+    data: Dict[int, Dict[str, str | float]], num_of_attr: int = 10
+) -> Dict[int, Dict[str, str | float]]:
+    """
+    Returns datasets consisting of randomly chosen columns (decision column is always included).
+
+    Parameters:
+        data (dict[str, list[float] | list[str]]): dataset as dictionary
+
+    Returns:
+        (Tuple[
+            Dict[int, Dict[str, str | float]],
+            Dict[int, Dict[str, str | float]],
+            Dict[int, Dict[str, str | float]]
+            ]): split datasets
+    """
+    new_ds = {}
+    attrs = get_attr_names(data)
+    attrs.remove(DECISION_COLUMN_SYMBOL)
+    chosen_attrs = sample(attrs, num_of_attr) + [DECISION_COLUMN_SYMBOL]
+    for i, record in data.items():
+        new_ds[i] = {attr: val for attr, val in record.items() if attr in chosen_attrs}
+    return new_ds
