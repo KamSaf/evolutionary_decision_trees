@@ -381,7 +381,7 @@ def get_random_ratio_attr(
     return chosen_attr, chosen_gain_ratio, chosen_thresh
 
 
-def evaluate(stats: Dict[str, List[int]]) -> List[float]:
+def evaluate(stats: Dict[str | float, List[int]]) -> List[float]:
     """
     Calculates average classification quality metrics from test statistics.
 
@@ -394,14 +394,11 @@ def evaluate(stats: Dict[str, List[int]]) -> List[float]:
     accuracy_sum = 0
     recall_sum = 0
     precision_sum = 0
-    for _, res in stats.items():
-        accuracy_sum += (res[0] + res[3]) / float(sum(res)) if sum(res) > 0 else 0
-        recall_sum += res[0] / float(res[0] + res[2]) if res[0] + res[2] > 0 else 0
-        precision_sum += res[0] / float(res[0] + res[1]) if res[0] + res[1] > 0 else 0
-    return [
-        round(stat / float(len(stats.keys())) * 100, 2)
-        for stat in (accuracy_sum, recall_sum, precision_sum)
-    ]
+    res = list(stats.values())[0]
+    accuracy_sum += (res[0] + res[3]) / float(sum(res)) if sum(res) > 0 else 0
+    recall_sum += res[0] / float(res[0] + res[2]) if res[0] + res[2] > 0 else 0
+    precision_sum += res[0] / float(res[0] + res[1]) if res[0] + res[1] > 0 else 0
+    return [accuracy_sum, recall_sum, precision_sum]
 
 
 def create_datasets(
@@ -428,7 +425,7 @@ def create_datasets(
             Dict[int, Dict[str, str | float]],
             Dict[int, Dict[str, str | float]],
             Dict[int, Dict[str, str | float]]
-            ]): split datasets
+            ]): split datasets (train, valid, test)
     """
     if train_ratio + valid_ratio + test_ratio != 1.0:
         raise (Exception("Invalid dataset split ratios. Must sum to 1.0."))
@@ -441,12 +438,12 @@ def create_datasets(
         for i, record in data.items()
         if i >= train_ds_max_index and i < valid_ds_max_index
     }
-    train_ds = {i: record for i, record in data.items() if i >= valid_ds_max_index}
-    return (train_ds, valid_ds, train_ds)
+    test_ds = {i: record for i, record in data.items() if i >= valid_ds_max_index}
+    return (train_ds, valid_ds, test_ds)
 
 
 def get_random_data(
-    data: Dict[int, Dict[str, str | float]], num_of_attr: int = 10
+    data: Dict[int, Dict[str, str | float]], num_of_attr: int = 8
 ) -> Dict[int, Dict[str, str | float]]:
     """
     Returns datasets consisting of randomly chosen columns (decision column is always included).
