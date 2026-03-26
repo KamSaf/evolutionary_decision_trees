@@ -50,7 +50,7 @@ class Node:
             val (str): value of a node to look for
 
         Returns:
-            (Node | None): children with given value
+            Node | None: children with given value
         """
         target = [c for c in self.children if c.val == val]
         return target[0] if len(target) else None
@@ -72,7 +72,7 @@ class Node:
             first_step (bool): flag marking first iteration (don't change)
 
         Returns:
-            (int): depth of tree
+            int: depth of tree
         """
         depth = 0 if first_step else 1
         depth_of_children = (
@@ -98,7 +98,7 @@ class Node:
         Returns randomly chosen node id from subtree.
 
         Returns:
-            (UUID): randomly chosen node ID
+            UUID: randomly chosen node ID
         """
         queue = self.children[:]
         nodes_ids = [self.id]
@@ -117,7 +117,7 @@ class Node:
             indent (int): indentation level (node depth)
 
         Returns:
-            (str): node data as string
+            str: node data as string
         """
         ind = INDENT * indent
         output = []
@@ -155,7 +155,7 @@ class Node:
             split_level (int): current split level (do not change)
             random (bool): random tree induction flag
         Returns:
-            (Node | None): decision tree
+            Node | None: decision tree
         """
         if root is None:
             root = Node()
@@ -202,7 +202,7 @@ class Node:
             data_row (Dict[str, str | float]): single row from dataset
 
         Returns:
-            (str | None): decision made with decision tree
+            str | None: decision made with decision tree
         """
         if "DECISION" in self.label:
             return self.label
@@ -226,7 +226,7 @@ class Node:
             test_ds (Dict[int, Dict[str, str | float]]): testing dataset
 
         Returns:
-            (Dict[str, List[int]]): TP, FP, FN, TN values for each class
+            Dict[str, List[int]]: TP, FP, FN, TN values for each class
         """
         results = {
             dec: [0, 0, 0, 0]
