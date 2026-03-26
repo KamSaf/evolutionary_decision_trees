@@ -44,22 +44,49 @@ class GP:
         self.population: List[Node] = []
 
     def __init_population(self) -> None:
+        """
+        Creates population of decision trees
+        """
         # TODO
         pass
 
     def __evaluate_population(self) -> List[Tuple[Node, float]]:
+        """
+        Calculates fitness for each decision tree in population.
+
+        Returns:
+            List[Tuple[Node, float]]: list of trees with their fitness values
+        """
         # TODO
         return [(Node(), 0.1)]
 
     def __roulette_selection(self) -> Node:
+        """
+        Selects tree from population using roulette wheel method.
+
+        Returns:
+            Node: decision tree selected from population
+        """
         # TODO
         return Node()
 
     def __tournament_selection(self) -> Node:
+        """
+        Selects tree from population using tournament method.
+
+        Returns:
+            Node: decision tree selected from population
+        """
         # TODO
         return Node()
 
     def __elitism(self) -> List[Node]:
+        """
+        Selects best fitted trees in population.
+
+        Returns:
+            List[Node]: list of best trees in population
+        """
         # TODO
         return []
 
@@ -67,14 +94,42 @@ class GP:
     def __crossover(
         parents: Tuple[Node, Node], crossover_rate: float
     ) -> Tuple[Node, Node]:
+        """
+        Implementation of crossover genetic operator. Switches randomly
+        chosen subtrees between two decision trees.
+
+        Parameters:
+            parents (Tuple[Node, Node]): parents, of which subtrees are to be replaced
+            crossover_rate (float): probability of crossover taking place
+
+        Returns:
+            Tuple[Node, Node]: pair of offsprings
+        """
         # TODO
         return parents
 
     @staticmethod
     def __mutation(tree: Node, mutation_rate: float) -> Node:
+        """
+        Implementation of mutation genetic operator. Replaces attribute
+        and value threshold in randomly chosen node of decision tree.
+
+        Parameters:
+            tree (Node): decision tree to be mutated
+            mutation_rate (float): probability of mutation taking place
+
+        Returns:
+            Node: mutated (or not) tree
+        """
         # TODO
         return tree
 
     def run(self) -> Node:
+        """
+        Runs genetic programming algorithm on population of decision trees.
+
+        Returns:
+            Node: best of the evolved decision trees
+        """
         # TODO
         return Node()
