@@ -62,7 +62,6 @@ def load_line(
         line (list[str]): data row as list of strings
         drop_col (List[int]): indexes of columns to be ignored
         dec_attr_id (int): id of decision column
-
     """
     row_id = len(data.keys())
     data[row_id] = {}
@@ -87,7 +86,7 @@ def get_attr_names(data: Dict[int, Dict[str, str | float]]) -> List[str]:
         data (Dict[int, Dict[str, str | float]]): dataset as dictionary
 
     Returns:
-        attr_names (list[str]): lisit of dataset attributes
+        list[str]: lisit of dataset attributes
     """
     return list(data[0].keys())
 
@@ -102,7 +101,7 @@ def get_unique_values(
         data (Dict[int, Dict[str, str | float]]): dataset as dictionary
 
     Returns:
-        unique_attr_vals (Dict[str, List[str | float]): key - attribute name, value - list of unique values in column
+        Dict[str, List[str | float]: key - attribute name, value - list of unique values in column
     """
     unique_values = {}
     for record in data.values():
@@ -123,7 +122,7 @@ def get_col(data: Dict[int, Dict[str, str | float]], attr: str) -> List[str | fl
         attr (str): attribute (column) name
 
     Returns:
-        col_vals (List[str | float]) - list of all attribute (column) values
+        List[str | float] - list of all attribute (column) values
     """
     return [record[attr] for record in data.values()]
 
@@ -135,7 +134,7 @@ def get_dataset_length(data: Dict[int, Dict[str, str | float]]) -> int:
     Parameters:
         data (Dict[int, Dict[str, str | float]]): dataset as dictionary
     Returns:
-        dataset_length (int) - length of dataset (decision column length)
+        int - length of dataset (decision column length)
     """
     return len(get_col(data, DECISION_COLUMN_SYMBOL))
 
@@ -150,7 +149,7 @@ def get_value_count(
         data (Dict[int, Dict[str, str | float]]): dataset as dictionary
 
     Returns:
-        attr_val_count (Dict[str, Dict[str | float, int]]) - key - attribute name, value - dictionary with
+        Dict[str, Dict[str | float, int]] - key - attribute name, value - dictionary with
         attribute value and number of appearances
     """
     unique_vals = get_unique_values(data)
@@ -171,7 +170,7 @@ def get_dominant_attr_val(
         data (Dict[int, Dict[str, str | float]]): dataset as dictionary
 
     Returns:
-        dom_val (str | float) - dominant value in column
+        str | float - dominant value in column
     """
     values_count = get_value_count(data)[attr]
     max_val = ""
@@ -193,7 +192,7 @@ def get_values_probabilities(
         column (List[str | float]): values of a column from dataset
 
     Returns:
-        values_propabilities (Dict[str | float, float]): key - column value, value - probability
+        Dict[str | float, float]: key - column value, value - probability
     """
     unique_values = list(set(column))
     probabilities = {val: column.count(val) / len(column) for val in unique_values}
@@ -208,7 +207,7 @@ def get_entropy(probabilities: List[float]) -> float:
         probabilities (List[float]): list of attribute values probabilities
 
     Return:
-        entropy (float): calculated entropy
+        float: calculated entropy
     """
     filtered_propabilities = (p for p in probabilities if p != 0)
     return -1 * sum([p * math.log2(p) for p in filtered_propabilities])
@@ -226,7 +225,7 @@ def split_dataset(
         attr (str): attribute name (column header)
 
     Returns:
-        split_data (List[Dict[int, Dict[str, str | float]]]): list of two data subsets split by given threshold
+        List[Dict[int, Dict[str, str | float]]]: list of two data subsets split by given threshold
     """
     subsets = [{}, {}]
     if attr == DECISION_COLUMN_SYMBOL:
@@ -250,7 +249,7 @@ def get_column_entropy(
         attr (str): attribute name
 
     Returns:
-        entropy (float): calculated entorpy of a given column
+        float: calculated entorpy of a given column
     """
     column = get_col(data, attr)
     values_propabilities = list(get_values_probabilities(column).values())
@@ -269,7 +268,7 @@ def get_info(
         attr (str): split attribute name
 
     Returns:
-        attr_info (float): calculated info of given attribute
+        float: calculated info of given attribute
     """
     data_subsets = split_dataset(data, thresh, attr=attr)
     info = 0
@@ -293,7 +292,7 @@ def get_gain_ratio(
         split_points (List[float]): list of value splitting points
 
     Returns:
-        gain_ratios (Tuple[float, float] | Tuple[None, None]):
+        Tuple[float, float] | Tuple[None, None]: tuple containing threshold and gain ratio
     """
     gain_ratios = {}
     if len(split_points) < 1:
@@ -318,10 +317,10 @@ def get_max_ratio_attr(
     Returns attribute name and threshold with highest gain ratio in given dataset.
 
     Parameters:
-        data (dict[str, list[float] | list[str]]): dataset as dictionary
+        data (Dict[int, Dict[str, str | float]]): dataset as dictionary
 
     Returns:
-        (tuple[str, float, float, float]): attribute name, gain ratio, threshold
+        Tuple[str, float, float]): attribute name, gain ratio, threshold
     """
     attrs = get_attr_names(data)
     attrs.remove(DECISION_COLUMN_SYMBOL)
@@ -352,10 +351,10 @@ def get_random_ratio_attr(
     Returns attribute name and threshold with randomly chosen gain ratio in given dataset.
 
     Parameters:
-        data (dict[str, list[float] | list[str]]): dataset as dictionary
+        data (Dict[int, Dict[str, str | float]]): dataset as dictionary
 
     Returns:
-        (tuple[str, float, float, float]): attribute name, gain ratio, threshold
+        Tuple[str, float, float]: attribute name, gain ratio, threshold
     """
     attrs = get_attr_names(data)
     attrs.remove(DECISION_COLUMN_SYMBOL)
@@ -388,7 +387,7 @@ def evaluate(stats: Dict[str | float, List[int]]) -> List[float]:
         stats (Dict[str, List[int]]): decision tree test statistics
 
     Returns:
-        metrics (List[float]): list of average classification metrics as floats
+        List[float]: list of average classification metrics as floats
     """
     accuracy_sum = 0
     recall_sum = 0
@@ -420,11 +419,11 @@ def create_datasets(
         test_ratio (float): test test split ratio
 
     Returns:
-        (Tuple[
+        Tuple[
             Dict[int, Dict[str, str | float]],
             Dict[int, Dict[str, str | float]],
             Dict[int, Dict[str, str | float]]
-            ]): split datasets (train, valid, test)
+            ]: split datasets (train, valid, test)
     """
     if train_ratio + valid_ratio + test_ratio != 1.0:
         raise (Exception("Invalid dataset split ratios. Must sum to 1.0."))
@@ -451,11 +450,11 @@ def get_random_data(
         data (dict[str, list[float] | list[str]]): dataset as dictionary
 
     Returns:
-        (Tuple[
+        Tuple[
             Dict[int, Dict[str, str | float]],
             Dict[int, Dict[str, str | float]],
             Dict[int, Dict[str, str | float]]
-            ]): split datasets
+            ]: split datasets
     """
     new_ds = {}
     attrs = get_attr_names(data)

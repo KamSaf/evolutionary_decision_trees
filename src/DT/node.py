@@ -19,7 +19,7 @@ from src.DT.utils import (
 class Node:
     def __assign_parent(self) -> None:
         """
-        Recursive method for assigning parent identificator
+        Recursively assigns parent identificator
         to nodes children.
         """
         if len(self.children) == 0:
@@ -44,20 +44,20 @@ class Node:
 
     def __get_child_by_value(self, val: str) -> "Node | None":
         """
-        Method for retrieving child of a node by value.
+        Returns child of a node by value.
 
         Parameters:
             val (str): value of a node to look for
 
         Returns:
-            node (Node | None): retrieved node
+            (Node | None): children with given value
         """
         target = [c for c in self.children if c.val == val]
         return target[0] if len(target) else None
 
     def __append_child(self, child: "Node") -> None:
         """
-        Method for adding node to children list.
+        Adds node to children list.
 
         Parameters:
            child (Node): node to be appended
@@ -66,13 +66,13 @@ class Node:
 
     def get_depth(self, first_step: bool = True) -> int:
         """
-        Recursive method for calculating depth of tree, where self is its root.
+        Recursively calculates depth of tree, where self is its root.
 
         Parameters:
             first_step (bool): flag marking first iteration (don't change)
 
         Returns:
-            tree_depth (int): depth of tree
+            (int): depth of tree
         """
         depth = 0 if first_step else 1
         depth_of_children = (
@@ -83,7 +83,7 @@ class Node:
 
     def update_node_attr(self, attr: str, thresh: float) -> None:
         """
-        Update nodes label and value with given attribute name and values threshold.
+        Updates nodes label and value with given attribute name and values threshold.
 
         Parameters:
             attr (str): new name of attribite
@@ -95,7 +95,7 @@ class Node:
 
     def get_random_node_id(self) -> UUID:
         """
-        Returns randomly chosen from node id from subtree.
+        Returns randomly chosen node id from subtree.
 
         Returns:
             (UUID): randomly chosen node ID
@@ -111,13 +111,13 @@ class Node:
 
     def __to_string(self, indent: int = 0) -> str:
         """
-        Recursive method for converting node data to string.
+        Recursively converts node data to string.
 
         Parameters:
             indent (int): indentation level (node depth)
 
         Returns:
-            text (str): node data as string
+            (str): node data as string
         """
         ind = INDENT * indent
         output = []
@@ -145,7 +145,7 @@ class Node:
         random: bool = False,
     ) -> "Node | None":
         """
-        Function for building decision tree structure.
+        Builds decision tree structure.
 
         Parameters:
             root (Node | None): root from which tree will be built
@@ -155,7 +155,7 @@ class Node:
             split_level (int): current split level (do not change)
             random (bool): random tree induction flag
         Returns:
-            tree (Node | None): decision tree
+            (Node | None): decision tree
         """
         if root is None:
             root = Node()
@@ -202,7 +202,7 @@ class Node:
             data_row (Dict[str, str | float]): single row from dataset
 
         Returns:
-            decision (str | None): decision made with decision tree
+            (str | None): decision made with decision tree
         """
         if "DECISION" in self.label:
             return self.label
@@ -220,13 +220,13 @@ class Node:
         self, test_ds: Dict[int, Dict[str, str | float]]
     ) -> Dict[str | float, List[int]]:
         """
-        Method testing decision tree classification with testing dataset.
+        Tests decision tree classification with testing dataset.
 
         Parameters:
             test_ds (Dict[int, Dict[str, str | float]]): testing dataset
 
         Returns:
-            results (Dict[str, List[int]]): TP, FP, FN, TN values for each class
+            (Dict[str, List[int]]): TP, FP, FN, TN values for each class
         """
         results = {
             dec: [0, 0, 0, 0]
