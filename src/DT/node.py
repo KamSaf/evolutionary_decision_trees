@@ -42,31 +42,7 @@ class Node:
         self.children = [] if children is None else children
         self.__assign_parent()
 
-    def restore(self) -> None:
-        """
-        Method for restoring node parameters to default.
-        """
-        self.label = "node"
-        self.children.clear()
-        self.val = "None"
-        self.parent_id = None
-
-    def get_child_by_id(self, id: UUID) -> "Node | None":
-        """
-        Method for retrieving child of a node by ID.
-
-        Parameters:
-            id (UUID): ID of a node to look for
-
-        Returns:
-            node (Node | None): retrieved node
-        """
-        if self.id == id:
-            return self
-        target = list(filter(lambda node: node.id == id, self.children))
-        return target[0] if len(target) else None
-
-    def get_child_by_value(self, val: str) -> "Node | None":
+    def __get_child_by_value(self, val: str) -> "Node | None":
         """
         Method for retrieving child of a node by value.
 
@@ -79,7 +55,7 @@ class Node:
         target = [c for c in self.children if c.val == val]
         return target[0] if len(target) else None
 
-    def append_child(self, child: "Node") -> None:
+    def __append_child(self, child: "Node") -> None:
         """
         Method for adding node to children list.
 
@@ -87,15 +63,6 @@ class Node:
            child (Node): node to be appended
         """
         self.children.append(child)
-
-    def get_children_vals(self) -> tuple[str | None, ...]:
-        """
-        Method for retrieving values of nodes children.
-
-        Returns:
-            val_list (tuple[str | None, ...]): list of children values
-        """
-        return tuple(map(lambda node: node.val, self.children))
 
     def get_depth(self, first_step: bool = True) -> int:
         """
@@ -142,7 +109,7 @@ class Node:
                 nodes_ids.append(c.id)
         return choice(nodes_ids)
 
-    def to_string(self, indent: int = 0) -> str:
+    def __to_string(self, indent: int = 0) -> str:
         """
         Recursive method for converting node data to string.
 
@@ -161,12 +128,12 @@ class Node:
         if self.children:
             output.append(f"{ind}Children:")
             for child in self.children:
-                output.append(child.to_string(indent + 1))
+                output.append(child.__to_string(indent + 1))
             output.append("\n")
         return "\n".join(output)
 
     def __str__(self) -> str:
-        return self.to_string()
+        return self.__to_string()
 
     @staticmethod
     def build_tree_struct(
@@ -223,7 +190,7 @@ class Node:
                 val=f"<= {thresh}" if i == 0 else f"> {thresh}",
                 parent_id=root.id,
             )
-            root.append_child(new_node)
+            root.__append_child(new_node)
             Node.build_tree_struct(new_node, sd, split_level=split_level)
         return root
 
@@ -243,7 +210,7 @@ class Node:
         val = data_row[attr]
         test_res = float(val) > float(thresh)
         next_step_val = f"{'>' if test_res else '<='} {thresh}"
-        next_step = self.get_child_by_value(next_step_val)
+        next_step = self.__get_child_by_value(next_step_val)
         if not next_step:
             return None
         pred = next_step.predict(data_row)
