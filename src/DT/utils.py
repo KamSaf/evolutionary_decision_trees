@@ -1,8 +1,7 @@
-from random import shuffle
 import math
+from random import shuffle, choice, sample
 from typing import List, Dict, Tuple
 from src.DT.config import DECISION_COLUMN_SYMBOL
-from random import choice, sample
 
 
 def randomize_data(path: str, output_path: str) -> None:
