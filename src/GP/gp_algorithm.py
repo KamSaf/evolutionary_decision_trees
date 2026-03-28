@@ -68,7 +68,7 @@ class GP:
         Creates population of decision trees
 
         Parameters:
-            log (bool): if yes then logs are displayed in console
+            display_log (bool): if yes then logs are displayed in console
         """
         random_trees_pop_size = self.random_pop_ratio * self.population_size
         if display_logs:
