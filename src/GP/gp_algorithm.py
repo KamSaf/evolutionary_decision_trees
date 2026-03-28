@@ -42,7 +42,7 @@ class GP:
         train_ds_ratio: float = 0.7,
         valid_ds_ratio: float = 0.15,
         test_ds_ratio: float = 0.15,
-        elite_individuals_num: int = 5,
+        elite_num: int = 5,
     ):
         self.dataset = dataset
         self.fitness_metric = fitness_metric
@@ -60,7 +60,7 @@ class GP:
             valid_ratio=valid_ds_ratio,
             test_ratio=test_ds_ratio,
         )
-        self.elite_individuals_num = elite_individuals_num
+        self.elite_individuals_num = elite_num
         self.population: List[Node] = []
 
     def __init_population(self, display_logs: bool = False) -> None:
