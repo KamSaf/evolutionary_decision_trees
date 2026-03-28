@@ -1,4 +1,6 @@
 from typing import List, Dict, Tuple
+
+# from copy import deepcopy
 from uuid import UUID
 from random import choice, uniform
 from enum import Enum
@@ -75,7 +77,7 @@ class GP:
         Returns:
             Node: decision tree selected from population
         """
-        # TODO
+        # TODO DEEPCOPY!!!!!!!
         return Node()
 
     def __tournament_selection(self) -> Node:
@@ -85,7 +87,7 @@ class GP:
         Returns:
             Node: decision tree selected from population
         """
-        # TODO
+        # TODO DEEPCOPY!!!!!!!
         return Node()
 
     def __elitism(self) -> List[Node]:
@@ -99,23 +101,30 @@ class GP:
         return []
 
     @staticmethod
-    def __crossover(
-        parents: List[Node], crossover_rate: float, attrs: List[str]
-    ) -> Tuple[Node, Node]:
+    def __crossover(parents: List[Node]) -> List[Node]:
         """
         Implementation of crossover genetic operator. Switches randomly
         chosen subtrees between two decision trees.
 
         Parameters:
             parents (List[Node]): parents, of which subtrees are to be replaced
-            crossover_rate (float): probability of crossover taking place
-            attrs (List[str]): list of attributes in dataset
 
         Returns:
             Tuple[Node, Node]: pair of offsprings
         """
-        # TODO
-        return (Node(), Node())
+        subtrees_ids = [p.get_random_node_id() for p in parents]
+        queue_subtree_1 = [node for node in parents[0].children]
+        for n1 in queue_subtree_1:
+            if n1.id != subtrees_ids[0]:
+                queue_subtree_1 += n1.children
+                continue
+            queue_subtree_2 = [node for node in parents[1].children]
+            for n2 in queue_subtree_2:
+                if n2 != subtrees_ids[1]:
+                    queue_subtree_2 += n2.children
+                    continue
+                n1.switch_nodes(n2)
+        return parents
 
     @staticmethod
     def __mutation(
@@ -142,8 +151,8 @@ class GP:
                 node.update_node_attr(
                     new_attr, uniform(min_thresh, max_tresh)  # type: ignore
                 )
-                return
-            GP.__mutation(node, id, train_ds)
+            else:
+                GP.__mutation(node, id, train_ds)
 
     def run(self) -> List[Tuple[Node, float]]:
         """
@@ -166,8 +175,10 @@ class GP:
                     )
                     for _ in range(2)
                 ]
-                offspring = GP.__crossover(
-                    parents, self.crossover_rate, get_attr_names(self.dataset)
+                offspring = (
+                    GP.__crossover(parents)
+                    if uniform(0, 1) <= self.crossover_rate
+                    else parents
                 )
 
                 for o in offspring:

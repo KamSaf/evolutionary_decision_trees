@@ -17,11 +17,15 @@ from src.DT.utils import (
 
 
 class Node:
-    def __assign_parent(self) -> None:
+    def __assign_parent(self, new_id: bool = False) -> None:
         """
         Recursively assigns parent identificator
         to nodes children.
+
+        Parameters:
+            new_id (bool): if yes then each node receives new ID
         """
+        self.id = uuid1()
         if len(self.children) == 0:
             return
         for c in self.children:
@@ -134,6 +138,23 @@ class Node:
 
     def __str__(self) -> str:
         return self.__to_string()
+
+    def switch_nodes(self, node: "Node") -> None:
+        """
+        Switches content between two decision trees (label, children).
+        Every node in each tree is given a new ID.
+
+        Parameters:
+            node (Node): second decision tree
+        """
+        self_node_label = self.label
+        self_node_children = self.children
+        self.label = node.label
+        self.children = node.children
+        node.label = self_node_label
+        node.children = self_node_children
+        for n in [self, node]:
+            n.__assign_parent(new_id=True)
 
     @staticmethod
     def build_tree_struct(
