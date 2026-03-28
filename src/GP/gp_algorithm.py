@@ -1,7 +1,14 @@
 from typing import List, Dict, Tuple
+from uuid import UUID
+from random import choice, uniform
 from enum import Enum
 from src.DT.node import Node
-from src.DT.utils import create_datasets, get_attr_names
+from src.DT.utils import (
+    create_datasets,
+    get_attr_names,
+    get_col,
+    DECISION_COLUMN_SYMBOL,
+)
 
 
 class SelectionMethods(Enum):
@@ -111,20 +118,32 @@ class GP:
         return (Node(), Node())
 
     @staticmethod
-    def __mutation(tree: Node, mutation_rate: float) -> Node:
+    def __mutation(
+        tree: Node,
+        id: UUID,
+        train_ds: Dict[int, Dict[str, str | float]],
+    ) -> None:
         """
         Implementation of mutation genetic operator. Replaces attribute
         and value threshold in randomly chosen node of decision tree.
 
         Parameters:
             tree (Node): decision tree to be mutated
-            mutation_rate (float): probability of mutation taking place
-
-        Returns:
-            Node: mutated (or not) tree
+            id (UUID): id of trees node to mutate
+            train_ds (Dict[int, Dict[str, str | float]]): dataset as dictionary
         """
-        # TODO
-        return tree
+        for node in tree.children:
+            if node.id == id:
+                attrs = get_attr_names(train_ds)
+                attrs.remove(DECISION_COLUMN_SYMBOL)
+                new_attr = choice(attrs)
+                attr_vals = get_col(train_ds, new_attr)
+                min_thresh, max_tresh = min(attr_vals), max(attr_vals)
+                node.update_node_attr(
+                    new_attr, uniform(min_thresh, max_tresh)  # type: ignore
+                )
+                return
+            GP.__mutation(node, id, train_ds)
 
     def run(self) -> List[Tuple[Node, float]]:
         """
@@ -150,7 +169,10 @@ class GP:
                 offspring = GP.__crossover(
                     parents, self.crossover_rate, get_attr_names(self.dataset)
                 )
+
                 for o in offspring:
-                    GP.__mutation(o, self.mutation_rate)
+                    if uniform(0, 1) <= self.mutation_rate:
+                        id = o.get_random_node_id()
+                        GP.__mutation(o, id, self.train_ds)
                     new_population.append(o)
         return best_trees
