@@ -1,4 +1,5 @@
 from typing import List, Dict, Tuple
+from time import time
 
 # from copy import deepcopy
 from uuid import UUID
@@ -12,6 +13,7 @@ from src.DT.utils import (
     get_random_data,
     DECISION_COLUMN_SYMBOL,
 )
+from src.GP.utils import log
 
 
 class SelectionMethods(Enum):
@@ -28,7 +30,7 @@ class GP:
     def __init__(
         self,
         dataset: Dict[int, Dict[str, str | float]],
-        fitness_metric: FitnessMetric,
+        fitness_metric: FitnessMetric = FitnessMetric.ACCURACY,
         population_size: int = 100,
         generations: int = 50,
         crossover_rate: float = 0.6,
@@ -61,7 +63,7 @@ class GP:
         self.elite_individuals_num = elite_individuals_num
         self.population: List[Node] = []
 
-    def __init_population(self, log: bool = False) -> None:
+    def __init_population(self, display_logs: bool = False) -> None:
         """
         Creates population of decision trees
 
@@ -69,22 +71,34 @@ class GP:
             log (bool): if yes then logs are displayed in console
         """
         random_trees_pop_size = self.random_pop_ratio * self.population_size
-        print("Creating random trees...")
+        if display_logs:
+            log("Creating random trees...")
         for i in range(int(random_trees_pop_size)):
+            start = time()
             ds = get_random_data(self.train_ds)
             self.population.append(
                 Node.build_tree_struct(
                     data=ds, max_tree_depth=self.max_tree_depth, random=True
                 )
             )
-            print(f"Random tree [{i + 1}] generated")
-        print("Creating random trees...")
+            stop = time()
+            if display_logs:
+                log(
+                    f"Random tree {self.population[-1].id} [{i + 1}] generated in {round(stop - start, 2)} seconds"
+                )
+        if display_logs:
+            log("Creating random trees...")
         for i in range(self.population_size - int(random_trees_pop_size)):
+            start = time()
             ds = get_random_data(self.train_ds)
             self.population.append(
                 Node.build_tree_struct(data=ds, max_tree_depth=self.max_tree_depth)
             )
-            print(f"Random tree [{i + 1}] generated")
+            stop = time()
+            if display_logs:
+                log(
+                    f"Random tree [{i + 1}] generated in {round(stop - start, 2)} seconds"
+                )
 
     def __evaluate_population(self) -> List[Tuple[Node, float]]:
         """

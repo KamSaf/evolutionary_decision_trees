@@ -11,7 +11,7 @@ data = read_data("random_data.data")
 
 gp = GP(data)
 
-gp._GP__init_population(log=True)
+gp._GP__init_population(display_logs=True)  # type: ignore
 
 print(len(gp.population))
 for tree in gp.population:
