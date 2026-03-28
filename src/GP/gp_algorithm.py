@@ -9,6 +9,7 @@ from src.DT.utils import (
     create_datasets,
     get_attr_names,
     get_col,
+    get_random_data,
     DECISION_COLUMN_SYMBOL,
 )
 
@@ -18,10 +19,16 @@ class SelectionMethods(Enum):
     ROULETTE_WHEEL = "roulette"
 
 
+class FitnessMetric(Enum):
+    ACCURACY = "accuracy"
+    F1_SCORE = "f1_score"
+
+
 class GP:
     def __init__(
         self,
         dataset: Dict[int, Dict[str, str | float]],
+        fitness_metric: FitnessMetric,
         population_size: int = 100,
         generations: int = 50,
         crossover_rate: float = 0.6,
@@ -36,6 +43,7 @@ class GP:
         elite_individuals_num: int = 5,
     ):
         self.dataset = dataset
+        self.fitness_metric = fitness_metric
         self.population_size = population_size
         self.generations = generations
         self.crossover_rate = crossover_rate
@@ -53,12 +61,30 @@ class GP:
         self.elite_individuals_num = elite_individuals_num
         self.population: List[Node] = []
 
-    def __init_population(self) -> None:
+    def __init_population(self, log: bool = False) -> None:
         """
         Creates population of decision trees
+
+        Parameters:
+            log (bool): if yes then logs are displayed in console
         """
-        # TODO
-        pass
+        random_trees_pop_size = self.random_pop_ratio * self.population_size
+        print("Creating random trees...")
+        for i in range(int(random_trees_pop_size)):
+            ds = get_random_data(self.train_ds)
+            self.population.append(
+                Node.build_tree_struct(
+                    data=ds, max_tree_depth=self.max_tree_depth, random=True
+                )
+            )
+            print(f"Random tree [{i + 1}] generated")
+        print("Creating random trees...")
+        for i in range(self.population_size - int(random_trees_pop_size)):
+            ds = get_random_data(self.train_ds)
+            self.population.append(
+                Node.build_tree_struct(data=ds, max_tree_depth=self.max_tree_depth)
+            )
+            print(f"Random tree [{i + 1}] generated")
 
     def __evaluate_population(self) -> List[Tuple[Node, float]]:
         """
