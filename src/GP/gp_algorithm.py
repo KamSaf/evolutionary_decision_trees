@@ -1,7 +1,7 @@
 from typing import List, Dict, Tuple
 from enum import Enum
 from src.DT.node import Node
-from src.DT.utils import create_datasets
+from src.DT.utils import create_datasets, get_attr_names
 
 
 class SelectionMethods(Enum):
@@ -26,6 +26,7 @@ class GP:
         test_ds_ratio: float = 0.15,
         elite_individuals_num: int = 5,
     ):
+        self.dataset = dataset
         self.population_size = population_size
         self.generations = generations
         self.crossover_rate = crossover_rate
@@ -92,21 +93,22 @@ class GP:
 
     @staticmethod
     def __crossover(
-        parents: Tuple[Node, Node], crossover_rate: float
+        parents: List[Node], crossover_rate: float, attrs: List[str]
     ) -> Tuple[Node, Node]:
         """
         Implementation of crossover genetic operator. Switches randomly
         chosen subtrees between two decision trees.
 
         Parameters:
-            parents (Tuple[Node, Node]): parents, of which subtrees are to be replaced
+            parents (List[Node]): parents, of which subtrees are to be replaced
             crossover_rate (float): probability of crossover taking place
+            attrs (List[str]): list of attributes in dataset
 
         Returns:
             Tuple[Node, Node]: pair of offsprings
         """
         # TODO
-        return parents
+        return (Node(), Node())
 
     @staticmethod
     def __mutation(tree: Node, mutation_rate: float) -> Node:
@@ -124,12 +126,31 @@ class GP:
         # TODO
         return tree
 
-    def run(self) -> Node:
+    def run(self) -> List[Tuple[Node, float]]:
         """
         Runs genetic programming algorithm on population of decision trees.
 
         Returns:
-            Node: best of the evolved decision trees
+            List[Tuple[Node, float]]: list of best trees (and their fitness) from each generation
         """
-        # TODO
-        return Node()
+        self.__init_population()
+        best_trees = []
+        for i in range(self.generations):
+            best_trees.append(self.__evaluate_population()[-1])
+            new_population = self.__elitism()
+            while len(new_population) < self.population_size:
+                parents = [
+                    (
+                        self.__tournament_selection()
+                        if self.selection_method == "tournament"
+                        else self.__roulette_selection()
+                    )
+                    for _ in range(2)
+                ]
+                offspring = GP.__crossover(
+                    parents, self.crossover_rate, get_attr_names(self.dataset)
+                )
+                for o in offspring:
+                    GP.__mutation(o, self.mutation_rate)
+                    new_population.append(o)
+        return best_trees
