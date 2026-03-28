@@ -127,7 +127,7 @@ class GP:
         return parents
 
     @staticmethod
-    def __mutation(
+    def __mutate(
         tree: Node,
         id: UUID,
         train_ds: Dict[int, Dict[str, str | float]],
@@ -152,7 +152,7 @@ class GP:
                     new_attr, uniform(min_thresh, max_tresh)  # type: ignore
                 )
             else:
-                GP.__mutation(node, id, train_ds)
+                GP.__mutate(node, id, train_ds)
 
     def run(self) -> List[Tuple[Node, float]]:
         """
@@ -184,6 +184,6 @@ class GP:
                 for o in offspring:
                     if uniform(0, 1) <= self.mutation_rate:
                         id = o.get_random_node_id()
-                        GP.__mutation(o, id, self.train_ds)
+                        GP.__mutate(o, id, self.train_ds)
                     new_population.append(o)
         return best_trees
