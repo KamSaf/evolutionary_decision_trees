@@ -18,7 +18,7 @@ Python implementation of entropy (gain ratio) based C4.5 decision trees inductio
 
 | HIPERPARAMETER  |  VALUE  | DEFAULT VALUE | DESCRIPTION |
 | ------------- |  -------------  | ------------- | ------------- |
-| ```dataset``` |  ```Dict[int, Dict[str, str | float]]```  | N/A | Dataset as a dictionary |  
+| ```dataset``` |  ```Dict[int, Dict[str, str or float]]```  | N/A | Dataset as a dictionary |  
 | ```fitness_metric``` |  ```"accuracy"``` or ```"f1_score"```  | ```"accuracy``` | Metric which is going to be used in fitness calculation |
 | ```population_size``` |  ```int```  | ```100``` | Number of decision trees in population |  
 | ```generations``` |  ```int```  | ```50```  | Number of genetic algorithm iterations |
