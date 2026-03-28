@@ -164,7 +164,7 @@ class Node:
         max_tree_depth: int = 8,
         split_level: int = 0,
         random: bool = False,
-    ) -> "Node | None":
+    ) -> "Node":
         """
         Builds decision tree structure.
 
@@ -176,7 +176,7 @@ class Node:
             split_level (int): current split level (do not change)
             random (bool): random tree induction flag
         Returns:
-            Node | None: decision tree
+            Node: decision tree
         """
         if root is None:
             root = Node()
@@ -189,7 +189,7 @@ class Node:
         )
         split_level += 1
         if (
-            abs(ratio) == 0 or split_level == max_tree_depth - 1
+            abs(ratio) == 0 or split_level == max_tree_depth
         ):  # may return tree consisting of one node if bad dataset is drawn
             root.label = (
                 f"DECISION: {get_dominant_attr_val(data, DECISION_COLUMN_SYMBOL)}"
@@ -212,7 +212,9 @@ class Node:
                 parent_id=root.id,
             )
             root.__append_child(new_node)
-            Node.build_tree_struct(new_node, sd, split_level=split_level)
+            Node.build_tree_struct(
+                new_node, sd, split_level=split_level, max_tree_depth=max_tree_depth
+            )
         return root
 
     def predict(self, data_row: Dict[str, str | float]) -> str | None:
