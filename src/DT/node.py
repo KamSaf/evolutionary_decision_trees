@@ -147,12 +147,12 @@ class Node:
         Parameters:
             node (Node): second decision tree
         """
-        self_node_label = self.label
-        self_node_children = self.children
-        self.label = node.label
-        self.children = node.children
-        node.label = self_node_label
-        node.children = self_node_children
+        self.label, self.children, node.label, node.children = (
+            node.label,
+            node.children,
+            self.label,
+            self.children,
+        )
         for n in [self, node]:
             n.__assign_parent(new_id=True)
 
