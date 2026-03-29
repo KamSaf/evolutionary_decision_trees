@@ -1,10 +1,10 @@
 from typing import List, Dict, Tuple
 from time import time
+from operator import itemgetter
 
 # from copy import deepcopy
 from uuid import UUID
 from random import choice, uniform
-from enum import Enum
 from src.DT.node import Node
 from src.DT.utils import (
     create_datasets,
@@ -13,17 +13,7 @@ from src.DT.utils import (
     get_random_data,
     DECISION_COLUMN_SYMBOL,
 )
-from src.GP.utils import log
-
-
-class SelectionMethods(Enum):
-    TOURNAMENT = "tournament"
-    ROULETTE_WHEEL = "roulette"
-
-
-class FitnessMetric(Enum):
-    ACCURACY = "accuracy"
-    F1_SCORE = "f1_score"
+from src.GP.utils import log, get_fitness, SelectionMethods, FitnessMetric
 
 
 class GP:
@@ -43,6 +33,7 @@ class GP:
         valid_ds_ratio: float = 0.15,
         test_ds_ratio: float = 0.15,
         elite_num: int = 5,
+        tree_depth_modifier: float = 0.01,
     ):
         self.dataset = dataset
         self.fitness_metric = fitness_metric
@@ -60,8 +51,9 @@ class GP:
             valid_ratio=valid_ds_ratio,
             test_ratio=test_ds_ratio,
         )
-        self.elite_individuals_num = elite_num
+        self.elite_num = elite_num
         self.population: List[Node] = []
+        self.tree_depth_modifier = tree_depth_modifier
 
     def __init_population(self, display_logs: bool = False) -> None:
         """
@@ -107,8 +99,15 @@ class GP:
         Returns:
             List[Tuple[Node, float]]: list of trees with their fitness values
         """
-        # TODO
-        return [(Node(), 0.1)]
+        return [
+            (
+                tree,
+                get_fitness(
+                    tree, self.valid_ds, self.fitness_metric, self.tree_depth_modifier
+                ),
+            )
+            for tree in self.population
+        ]
 
     def __roulette_selection(self) -> Node:
         """
@@ -137,8 +136,13 @@ class GP:
         Returns:
             List[Node]: list of best trees in population
         """
-        # TODO
-        return []
+        eval_trees = [
+            node
+            for node, _ in sorted(
+                self.__evaluate_population(), key=itemgetter(1), reverse=True
+            )
+        ]
+        return eval_trees[: self.elite_num]
 
     @staticmethod
     def __crossover(parents: List[Node]) -> List[Node]:
