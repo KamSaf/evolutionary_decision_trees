@@ -387,7 +387,7 @@ def evaluate(stats: Dict[str | float, List[int]]) -> List[float]:
         stats (Dict[str, List[int]]): decision tree test statistics
 
     Returns:
-        List[float]: list of average classification metrics as floats
+        List[float]: list of average classification metrics as floats (accuracy, recall, precision)
     """
     accuracy_sum = 0
     recall_sum = 0
