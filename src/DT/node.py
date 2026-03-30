@@ -78,12 +78,26 @@ class Node:
         Returns:
             int: depth of tree
         """
-        depth = 0 if first_step else 1
+        depth = 1
         depth_of_children = (
             [c.get_depth(False) for c in self.children] if len(self.children) else []
         )
         max_children_depth = max(depth_of_children) if len(depth_of_children) > 0 else 0
         return depth + max_children_depth
+
+    def get_nodes_count(self) -> int:
+        """
+        Returns number of nodes in decision tree.
+
+        Returns:
+            int: number of nodes
+        """
+        count = 1
+        queue = [n for n in self.children]
+        for n in queue:
+            count += 1
+            queue += n.children
+        return count
 
     def update_node_attr(
         self, attr: str, thresh: float, decision_classes: List[float | str]
