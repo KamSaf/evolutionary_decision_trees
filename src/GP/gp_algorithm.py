@@ -33,6 +33,7 @@ class GP:
         test_ds_ratio: float = 0.15,
         elite_num: int = 5,
         tree_depth_modifier: float = 0.01,
+        num_of_attrs: int = 8,
     ):
         self.dataset = dataset
         self.fitness_metric = fitness_metric
@@ -53,6 +54,7 @@ class GP:
         self.elite_num = elite_num
         self.population: List[Node] = []
         self.tree_depth_modifier = tree_depth_modifier
+        self.num_of_attrs = num_of_attrs
 
     def __init_population(self, display_logs: bool = False) -> None:
         """
@@ -66,7 +68,7 @@ class GP:
             log("Creating random trees...")
         for i in range(int(random_trees_pop_size)):
             start = time()
-            ds = get_random_data(self.train_ds)
+            ds = get_random_data(self.train_ds, self.num_of_attrs)
             self.population.append(
                 Node.build_tree_struct(
                     data=ds, max_tree_depth=self.max_tree_depth, random=True
@@ -81,13 +83,15 @@ class GP:
             log("Creating trees...")
         for i in range(self.population_size - int(random_trees_pop_size)):
             start = time()
-            ds = get_random_data(self.train_ds)
+            ds = get_random_data(self.train_ds, self.num_of_attrs)
             self.population.append(
                 Node.build_tree_struct(data=ds, max_tree_depth=self.max_tree_depth)
             )
             stop = time()
             if display_logs:
-                log(f"Tree [{i + 1}] generated in {round(stop - start, 2)} seconds")
+                log(
+                    f"Tree {self.population[-1].id} [{i + 1}] generated in {round(stop - start, 2)} seconds"
+                )
 
     def __evaluate_population(self) -> List[Tuple[Node, float]]:
         """

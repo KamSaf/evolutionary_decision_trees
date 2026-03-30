@@ -7,13 +7,33 @@ seed(42)
 randomize_data("data/wdbc_long.data", "random_data.data")
 data = read_data("random_data.data")
 
+# randomize_data("data/car_sil.data", "random_data.data")
+# data = read_data("random_data.data", sep=" ", drop_col=[], dec_attr_id=18)  num_of_attrs=8, max_tree_depth=10
+
+# randomize_data("data/leaf.csv", "random_data.data")
+# data = read_data("random_data.data", drop_col=[], dec_attr_id=0)
+
+# randomize_data("data/sonar.all-data", "random_data.data")
+# data = read_data("random_data.data", drop_col=[], dec_attr_id=60)
+
+
+# gp = GP(
+#     data,
+#     population_size=100,
+#     elite_num=3,
+#     crossover_rate=0.7,
+#     mutation_rate=0.2,
+# )
+
 gp = GP(
     data,
     population_size=100,
     elite_num=3,
     crossover_rate=0.7,
     mutation_rate=0.2,
+    generations=150,
 )
+
 
 gp._GP__init_population(display_logs=True)  # type: ignore
 best_trees = gp.run(display_logs=True)
