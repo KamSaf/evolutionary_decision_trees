@@ -185,7 +185,7 @@ class GP:
                 continue
             queue_subtree_2 = [node for node in parents[1].children]
             for n2 in queue_subtree_2:
-                if n2 != subtrees_ids[1]:
+                if n2.id != subtrees_ids[1]:
                     queue_subtree_2 += n2.children
                     continue
                 if display_logs:
@@ -251,20 +251,15 @@ class GP:
                 parents = [
                     (
                         self.__tournament_selection(display_logs)[0]
-                        if self.selection_method == "tournament"
+                        if self.selection_method == SelectionMethods.TOURNAMENT
                         else self.__roulette_selection(display_logs)[0]
                     )
                     for _ in range(2)
                 ]
                 crossover_roll = randint(1, 100)
-                print(
-                    "Crossover roll: ",
-                    crossover_roll,
-                    crossover_roll <= int(self.crossover_rate * 100),
-                )
                 offspring = (
                     GP.__crossover(parents, display_logs)
-                    if crossover_roll <= int(self.crossover_rate)
+                    if crossover_roll <= int(self.crossover_rate * 100)
                     else parents
                 )
                 for o in offspring:
