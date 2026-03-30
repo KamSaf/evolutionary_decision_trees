@@ -189,7 +189,7 @@ class Node:
         )
         split_level += 1
         if (
-            abs(ratio) == 0 or split_level == max_tree_depth
+            abs(ratio) == 0 or split_level == max_tree_depth - 1
         ):  # may return tree consisting of one node if bad dataset is drawn
             root.label = (
                 f"DECISION: {get_dominant_attr_val(data, DECISION_COLUMN_SYMBOL)}"

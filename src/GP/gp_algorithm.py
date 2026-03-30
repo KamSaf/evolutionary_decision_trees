@@ -1,10 +1,9 @@
 from typing import List, Dict, Tuple
 from time import time
 from operator import itemgetter
-
-# from copy import deepcopy
+from copy import deepcopy
 from uuid import UUID
-from random import choice, uniform
+from random import choice, uniform, choices, randint
 from src.DT.node import Node
 from src.DT.utils import (
     create_datasets,
@@ -79,7 +78,7 @@ class GP:
                     f"Random tree {self.population[-1].id} [{i + 1}] generated in {round(stop - start, 2)} seconds"
                 )
         if display_logs:
-            log("Creating random trees...")
+            log("Creating trees...")
         for i in range(self.population_size - int(random_trees_pop_size)):
             start = time()
             ds = get_random_data(self.train_ds)
@@ -88,9 +87,7 @@ class GP:
             )
             stop = time()
             if display_logs:
-                log(
-                    f"Random tree [{i + 1}] generated in {round(stop - start, 2)} seconds"
-                )
+                log(f"Tree [{i + 1}] generated in {round(stop - start, 2)} seconds")
 
     def __evaluate_population(self) -> List[Tuple[Node, float]]:
         """
@@ -109,25 +106,45 @@ class GP:
             for tree in self.population
         ]
 
-    def __roulette_selection(self) -> Node:
+    def __roulette_selection(self, display_logs: bool = False) -> Tuple[Node, float]:
         """
         Selects tree from population using roulette wheel method.
 
-        Returns:
-            Node: decision tree selected from population
-        """
-        # TODO DEEPCOPY!!!!!!!
-        return Node()
+        Parameters:
+            display_log (bool): if yes then logs are displayed in console
 
-    def __tournament_selection(self) -> Node:
+        Returns:
+            Tuple[Node, float]: decision tree selected from population and its fitness
+        """
+        pop_eval = self.__evaluate_population()
+        fitness_sum = sum([el[1] for el in pop_eval])
+        pop_probabilities = [(node, fit / fitness_sum) for node, fit in pop_eval]
+        chosen_tree = choices(
+            [el for el in pop_eval], [el[1] for el in pop_probabilities]
+        )[0]
+        if display_logs:
+            log(f"ROULETTE: Tree {chosen_tree[0].id} selected")
+        return deepcopy(chosen_tree)
+
+    def __tournament_selection(self, display_logs: bool = False) -> Tuple[Node, float]:
         """
         Selects tree from population using tournament method.
 
+        Parameters:
+            display_log (bool): if yes then logs are displayed in console
+
         Returns:
-            Node: decision tree selected from population
+            Tuple[Node, float]: decision tree selected from population and its fitness
         """
-        # TODO DEEPCOPY!!!!!!!
-        return Node()
+        tournament = sorted(
+            [self.__roulette_selection() for _ in range(self.tournament_size)],
+            key=itemgetter(1),
+            reverse=True,
+        )  # Deepcopies are created at roulette selection
+        if display_logs:
+            log(f"TOURNAMENT: Tree {tournament[0][0].id} selected")
+
+        return tournament[0]
 
     def __elitism(self) -> List[Node]:
         """
@@ -145,13 +162,17 @@ class GP:
         return eval_trees[: self.elite_num]
 
     @staticmethod
-    def __crossover(parents: List[Node]) -> List[Node]:
+    def __crossover(
+        parents: List[Node],
+        display_logs: bool = False,
+    ) -> List[Node]:
         """
         Implementation of crossover genetic operator. Switches randomly
         chosen subtrees between two decision trees.
 
         Parameters:
             parents (List[Node]): parents, of which subtrees are to be replaced
+            display_logs (bool): if yes then logs are displayed in console
 
         Returns:
             Tuple[Node, Node]: pair of offsprings
@@ -167,6 +188,8 @@ class GP:
                 if n2 != subtrees_ids[1]:
                     queue_subtree_2 += n2.children
                     continue
+                if display_logs:
+                    log(f"Crossover on nodes {n1.id} and {n2.id}")
                 n1.switch_nodes(n2)
         return parents
 
@@ -175,6 +198,7 @@ class GP:
         tree: Node,
         id: UUID,
         train_ds: Dict[int, Dict[str, str | float]],
+        display_logs: bool = False,
     ) -> None:
         """
         Implementation of mutation genetic operator. Replaces attribute
@@ -184,9 +208,12 @@ class GP:
             tree (Node): decision tree to be mutated
             id (UUID): id of trees node to mutate
             train_ds (Dict[int, Dict[str, str | float]]): dataset as dictionary
+            display_logs (bool): if yes then logs are displayed in console
         """
         for node in tree.children:
             if node.id == id:
+                if display_logs:
+                    log(f"Mutation on node {id}")
                 attrs = get_attr_names(train_ds)
                 attrs.remove(DECISION_COLUMN_SYMBOL)
                 new_attr = choice(attrs)
@@ -198,9 +225,12 @@ class GP:
             else:
                 GP.__mutate(node, id, train_ds)
 
-    def run(self) -> List[Tuple[Node, float]]:
+    def run(self, display_logs: bool = False) -> List[Tuple[Node, float]]:
         """
         Runs genetic programming algorithm on population of decision trees.
+
+        Parameters:
+            display_logs (bool): if yes then logs are displayed in console
 
         Returns:
             List[Tuple[Node, float]]: list of best trees (and their fitness) from each generation
@@ -208,26 +238,43 @@ class GP:
         self.__init_population()
         best_trees = []
         for i in range(self.generations):
-            best_trees.append(self.__evaluate_population()[-1])
+            best_tree = self.__evaluate_population()[-1]
+            best_trees.append(best_tree)
+            if display_logs:
+                log(f"Generation [{i + 1}]")
+                log(
+                    f"Best tree from last population: {best_tree[0].id}, fitness = {best_tree[1]}"
+                )
             new_population = self.__elitism()
             while len(new_population) < self.population_size:
                 parents = [
                     (
-                        self.__tournament_selection()
+                        self.__tournament_selection(display_logs=display_logs)[0]
                         if self.selection_method == "tournament"
-                        else self.__roulette_selection()
+                        else self.__roulette_selection(display_logs=display_logs)[0]
                     )
                     for _ in range(2)
                 ]
+                crossover_roll = randint(1, 100)
+                print(
+                    "Crossover roll: ",
+                    crossover_roll,
+                    crossover_roll <= int(self.crossover_rate * 100),
+                )
                 offspring = (
-                    GP.__crossover(parents)
-                    if uniform(0, 1) <= self.crossover_rate
+                    GP.__crossover(parents, display_logs=display_logs)
+                    if crossover_roll <= int(self.crossover_rate)
                     else parents
                 )
-
                 for o in offspring:
-                    if uniform(0, 1) <= self.mutation_rate:
+                    mutation_roll = randint(1, 100)
+                    print(
+                        "Mutation roll ",
+                        mutation_roll,
+                        mutation_roll <= int(self.mutation_rate * 100),
+                    )
+                    if mutation_roll <= int(self.mutation_rate * 100):
                         id = o.get_random_node_id()
-                        GP.__mutate(o, id, self.train_ds)
+                        GP.__mutate(o, id, self.train_ds, display_logs=display_logs)
                     new_population.append(o)
         return best_trees
