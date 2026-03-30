@@ -7,16 +7,33 @@ seed(42)
 randomize_data("data/wdbc_long.data", "random_data.data")
 data = read_data("random_data.data")
 
-gp = GP(data, population_size=10, elite_num=3, crossover_rate=0.7, mutation_rate=0.2)
+gp = GP(
+    data,
+    population_size=100,
+    elite_num=3,
+    crossover_rate=0.7,
+    mutation_rate=0.2,
+)
 
 gp._GP__init_population(display_logs=True)  # type: ignore
 best_trees = gp.run(display_logs=True)
 
-print([el[1] for el in best_trees])
+# print([el[1] for el in best_trees])
 last_tree = best_trees[-1][0]
 
-tree = Node.build_tree_struct(data=gp.train_ds)
-tree_benchmark = evaluate(tree.test_tree(gp.train_ds))
+tree = Node.build_tree_struct(data=gp.train_ds, max_tree_depth=10)
+tree_benchmark = evaluate(tree.test_tree(gp.test_ds))
 
-print("\nC4.5 result: ", tree_benchmark)
-print("GP algorithm: ", evaluate(last_tree.test_tree(gp.test_ds)))
+random_tree = Node.build_tree_struct(data=gp.train_ds, random=True, max_tree_depth=10)
+random_tree_benchmark = evaluate(random_tree.test_tree(gp.test_ds))
+
+print("\nC4.5 tree result: ", tree_benchmark, ", depth: ", tree.get_depth())
+print(
+    "Random tree result: ", random_tree_benchmark, ", depth: ", random_tree.get_depth()
+)
+print(
+    "GP algorithm tree: ",
+    evaluate(last_tree.test_tree(gp.test_ds)),
+    ", depth: ",
+    last_tree.get_depth(),
+)

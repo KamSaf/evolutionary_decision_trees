@@ -45,7 +45,11 @@ def get_fitness(
         float: decision tree fitness
     """
     accuracy, recall, precision = evaluate(tree.test_tree(valid_ds))
-    f1_score = (2 * precision * recall) / (precision + recall)
+    f1_score = (
+        (2 * precision * recall) / (precision + recall)
+        if (precision + recall) > 0
+        else 0.0
+    )
     metric_val = accuracy if fitness_metric == "accuracy" else f1_score
     depth = tree.get_depth()
     return metric_val - depth * tree_depth_modifier

@@ -106,7 +106,9 @@ class GP:
             for tree in self.population
         ]
 
-    def __roulette_selection(self, display_logs: bool = False) -> Tuple[Node, float]:
+    def __roulette_selection(
+        self, pop_eval: List[Tuple[Node, float]], display_logs: bool = False
+    ) -> Tuple[Node, float]:
         """
         Selects tree from population using roulette wheel method.
 
@@ -116,7 +118,6 @@ class GP:
         Returns:
             Tuple[Node, float]: decision tree selected from population and its fitness
         """
-        pop_eval = self.__evaluate_population()
         fitness_sum = sum([el[1] for el in pop_eval])
         pop_probabilities = [(node, fit / fitness_sum) for node, fit in pop_eval]
         chosen_tree = choices(
@@ -126,7 +127,9 @@ class GP:
             log(f"ROULETTE: Tree {chosen_tree[0].id} selected")
         return deepcopy(chosen_tree)
 
-    def __tournament_selection(self, display_logs: bool = False) -> Tuple[Node, float]:
+    def __tournament_selection(
+        self, pop_eval: List[Tuple[Node, float]], display_logs: bool = False
+    ) -> Tuple[Node, float]:
         """
         Selects tree from population using tournament method.
 
@@ -137,7 +140,7 @@ class GP:
             Tuple[Node, float]: decision tree selected from population and its fitness
         """
         tournament = sorted(
-            [self.__roulette_selection() for _ in range(self.tournament_size)],
+            [self.__roulette_selection(pop_eval) for _ in range(self.tournament_size)],
             key=itemgetter(1),
             reverse=True,
         )  # Deepcopies are created at roulette selection
@@ -146,19 +149,14 @@ class GP:
 
         return tournament[0]
 
-    def __elitism(self) -> List[Node]:
+    def __elitism(self, pop_eval: List[Tuple[Node, float]]) -> List[Node]:
         """
         Selects best fitted trees in population.
 
         Returns:
             List[Node]: list of best trees in population
         """
-        eval_trees = [
-            node
-            for node, _ in sorted(
-                self.__evaluate_population(), key=itemgetter(1), reverse=True
-            )
-        ]
+        eval_trees = [node for node, _ in pop_eval]
         return eval_trees[: self.elite_num]
 
     @staticmethod
@@ -239,20 +237,23 @@ class GP:
         self.__init_population()
         best_trees = []
         for i in range(self.generations):
-            best_tree = self.__evaluate_population()[-1]
+            pop_eval = sorted(
+                self.__evaluate_population(), key=itemgetter(1), reverse=True
+            )
+            best_tree = pop_eval[0]
             best_trees.append(best_tree)
             if display_logs:
                 log(f"Generation [{i + 1}]")
                 log(
                     f"Best tree from last population: {best_tree[0].id}, fitness = {best_tree[1]}"
                 )
-            new_population = self.__elitism()
+            new_population = self.__elitism(pop_eval)
             while len(new_population) < self.population_size:
                 parents = [
                     (
-                        self.__tournament_selection(display_logs)[0]
+                        self.__tournament_selection(pop_eval, display_logs)[0]
                         if self.selection_method == SelectionMethods.TOURNAMENT
-                        else self.__roulette_selection(display_logs)[0]
+                        else self.__roulette_selection(pop_eval, display_logs)[0]
                     )
                     for _ in range(2)
                 ]
@@ -268,4 +269,5 @@ class GP:
                         id = o.get_random_node_id()
                         GP.__mutate(o, id, self.train_ds, display_logs)
                     new_population.append(o)
+            self.population = new_population
         return best_trees
