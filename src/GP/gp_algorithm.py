@@ -218,12 +218,13 @@ class GP:
                 attrs.remove(DECISION_COLUMN_SYMBOL)
                 new_attr = choice(attrs)
                 attr_vals = get_col(train_ds, new_attr)
+                decision_classes = list(set(get_col(train_ds, DECISION_COLUMN_SYMBOL)))
                 min_thresh, max_tresh = min(attr_vals), max(attr_vals)
                 node.update_node_attr(
-                    new_attr, uniform(min_thresh, max_tresh)  # type: ignore
+                    new_attr, uniform(min_thresh, max_tresh), decision_classes  # type: ignore
                 )
             else:
-                GP.__mutate(node, id, train_ds)
+                GP.__mutate(node, id, train_ds, display_logs)
 
     def run(self, display_logs: bool = False) -> List[Tuple[Node, float]]:
         """
@@ -249,9 +250,9 @@ class GP:
             while len(new_population) < self.population_size:
                 parents = [
                     (
-                        self.__tournament_selection(display_logs=display_logs)[0]
+                        self.__tournament_selection(display_logs)[0]
                         if self.selection_method == "tournament"
-                        else self.__roulette_selection(display_logs=display_logs)[0]
+                        else self.__roulette_selection(display_logs)[0]
                     )
                     for _ in range(2)
                 ]
@@ -262,19 +263,14 @@ class GP:
                     crossover_roll <= int(self.crossover_rate * 100),
                 )
                 offspring = (
-                    GP.__crossover(parents, display_logs=display_logs)
+                    GP.__crossover(parents, display_logs)
                     if crossover_roll <= int(self.crossover_rate)
                     else parents
                 )
                 for o in offspring:
                     mutation_roll = randint(1, 100)
-                    print(
-                        "Mutation roll ",
-                        mutation_roll,
-                        mutation_roll <= int(self.mutation_rate * 100),
-                    )
                     if mutation_roll <= int(self.mutation_rate * 100):
                         id = o.get_random_node_id()
-                        GP.__mutate(o, id, self.train_ds, display_logs=display_logs)
+                        GP.__mutate(o, id, self.train_ds, display_logs)
                     new_population.append(o)
         return best_trees

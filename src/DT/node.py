@@ -1,5 +1,5 @@
 from typing import Dict, List
-from random import choice
+from random import choice, randint, shuffle
 from uuid import uuid1, UUID
 from src.DT.config import (
     DECISION_COLUMN_SYMBOL,
@@ -85,7 +85,9 @@ class Node:
         max_children_depth = max(depth_of_children) if len(depth_of_children) > 0 else 0
         return depth + max_children_depth
 
-    def update_node_attr(self, attr: str, thresh: float) -> None:
+    def update_node_attr(
+        self, attr: str, thresh: float, decision_classes: List[float | str]
+    ) -> None:
         """
         Updates nodes label and value with given attribute name and values threshold.
 
@@ -93,9 +95,17 @@ class Node:
             attr (str): new name of attribite
             thresh (float): new attribute value threshold
         """
-        self.label = f"{attr} > {thresh}"
-        for i, c in enumerate(self.children):
-            c.val = f"<= {thresh}" if i == 0 else f"> {thresh}"
+        shuffle(decision_classes)
+        decision_or_split = randint(0, 1)
+        if decision_or_split:
+            self.label = f"DECISION: {decision_classes[0]}"
+            self.children = []
+        else:
+            self.label = f"{attr} > {thresh}"
+            for i, c in enumerate(self.children):
+                c.val = f"<= {thresh}" if i == 0 else f"> {thresh}"
+                c.label = f"DECISION: {decision_classes[i]}"
+                c.children = []
 
     def get_random_node_id(self) -> UUID:
         """
