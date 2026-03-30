@@ -381,7 +381,7 @@ def get_random_ratio_attr(
 
 def evaluate(stats: Dict[str | float, List[int]]) -> List[float]:
     """
-    Calculates average classification quality metrics from test statistics.
+    Calculates average classification quality metrics from test statistics for multiple (< 2) decision classes.
 
     Parameters:
         stats (Dict[str, List[int]]): decision tree test statistics
@@ -389,14 +389,25 @@ def evaluate(stats: Dict[str | float, List[int]]) -> List[float]:
     Returns:
         List[float]: list of average classification metrics as floats (accuracy, recall, precision)
     """
+    decision_classes_count = float(len(stats.keys()))
     accuracy_sum = 0
     recall_sum = 0
     precision_sum = 0
-    res = list(stats.values())[0]
-    accuracy_sum += (res[0] + res[3]) / float(sum(res)) if sum(res) > 0 else 0
-    recall_sum += res[0] / float(res[0] + res[2]) if res[0] + res[2] > 0 else 0
-    precision_sum += res[0] / float(res[0] + res[1]) if res[0] + res[1] > 0 else 0
-    return [accuracy_sum, recall_sum, precision_sum]
+    for _, res in stats.items():
+        pass
+        accuracy_sum += (res[0] + res[3]) / float(sum(res)) if sum(res) > 0 else 0
+        recall_sum += res[0] / float(res[0] + res[2]) if res[0] + res[2] > 0 else 0
+        precision_sum += res[0] / float(res[0] + res[1]) if res[0] + res[1] > 0 else 0
+    return list(
+        map(
+            lambda x: x / decision_classes_count,
+            [
+                accuracy_sum,
+                recall_sum,
+                precision_sum,
+            ],
+        )
+    )
 
 
 def create_datasets(
