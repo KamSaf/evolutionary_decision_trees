@@ -1,5 +1,5 @@
 from typing import Dict, List
-from random import choice, randint, shuffle
+from random import choice, randint, shuffle, uniform
 from uuid import uuid1, UUID
 from src.DT.config import (
     DECISION_COLUMN_SYMBOL,
@@ -13,6 +13,8 @@ from src.DT.utils import (
     split_dataset,
     get_dominant_attr_val,
     get_random_ratio_attr,
+    get_col,
+    get_attr_names,
 )
 
 
@@ -100,22 +102,28 @@ class Node:
         return count
 
     def update_node_attr(
-        self, attr: str, thresh: float, decision_classes: List[float | str]
+        self,
+        train_ds: Dict[int, Dict[str, str | float]],
     ) -> None:
         """
         Updates nodes label and value with given attribute name and values threshold.
 
         Parameters:
-            attr (str): new name of attribite
-            thresh (float): new attribute value threshold
+            train_ds (Dict[int, Dict[str, str | float]]): trainig dataset
         """
+        decision_classes = list(set(get_col(train_ds, DECISION_COLUMN_SYMBOL)))
         shuffle(decision_classes)
         decision_or_split = randint(0, 1)
         if decision_or_split:
             self.label = f"DECISION: {decision_classes[0]}"
             self.children = []
         else:
-            self.label = f"{attr} > {thresh}"
+            attrs = get_attr_names(train_ds)
+            attrs.remove(DECISION_COLUMN_SYMBOL)
+            new_attr = choice(attrs)
+            attr_vals = get_col(train_ds, new_attr)
+            thresh = uniform(min(attr_vals), max(attr_vals))  # type: ignore
+            self.label = f"{new_attr} > {thresh}"
             for i, c in enumerate(self.children):
                 c.val = f"<= {thresh}" if i == 0 else f"> {thresh}"
                 c.label = f"DECISION: {decision_classes[i]}"

@@ -3,14 +3,11 @@ from time import time
 from operator import itemgetter
 from copy import deepcopy
 from uuid import UUID
-from random import choice, uniform, choices, randint
+from random import choices, randint
 from src.DT.node import Node
 from src.DT.utils import (
     create_datasets,
-    get_attr_names,
-    get_col,
     get_random_data,
-    DECISION_COLUMN_SYMBOL,
 )
 from src.GP.utils import log, get_fitness, SelectionMethods, FitnessMetric
 
@@ -216,15 +213,7 @@ class GP:
             if node.id == id:
                 if display_logs:
                     log(f"Mutation on node {id}")
-                attrs = get_attr_names(train_ds)
-                attrs.remove(DECISION_COLUMN_SYMBOL)
-                new_attr = choice(attrs)
-                attr_vals = get_col(train_ds, new_attr)
-                decision_classes = list(set(get_col(train_ds, DECISION_COLUMN_SYMBOL)))
-                min_thresh, max_tresh = min(attr_vals), max(attr_vals)
-                node.update_node_attr(
-                    new_attr, uniform(min_thresh, max_tresh), decision_classes  # type: ignore
-                )
+                node.update_node_attr(train_ds)
             else:
                 GP.__mutate(node, id, train_ds, display_logs)
 
